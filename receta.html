@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clínica Bienestar - Emitir Receta</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/favicon_clinica.png">
+    <!-- QRCode.js para generar el QR en el navegador -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        #qr-container { display: flex; justify-content: center; }
+        #qr-container canvas, #qr-container img { border: 2px solid #dee2e6; border-radius: 8px; padding: 8px; }
+        .receta-impresa { border: 2px solid #0d6efd; border-radius: 8px; padding: 24px; background: #f8f9ff; }
+        @media print {
+            nav, footer, .no-print { display: none !important; }
+            .receta-impresa { border: 2px solid #000; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary no-print">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <img src="images/logo.png" alt="Logo" class="navbar-logo">
+                <span class="ms-2">Clínica Bienestar</span>
+            </a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto" id="user-info"></ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="pacientes.html">← Volver a Pacientes</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="logoutUser(event)">Cerrar Sesión</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+
+                <!-- Formulario de receta (se oculta al emitir) -->
+                <div id="form-section">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-info text-white">
+                            <h2 class="mb-0">💊 Emitir Receta Médica</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-secondary mb-4" id="info-paciente">
+                                <strong>Paciente:</strong> <span id="lbl-nombre">—</span> &nbsp;|&nbsp;
+                                <strong>RUT:</strong> <span id="lbl-rut">—</span>
+                            </div>
+
+                            <form id="recetaForm" novalidate>
+                                <div class="mb-3">
+                                    <label class="form-label">Medicamento <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="medicamento" placeholder="Ej: Ibuprofeno 400mg" required>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Dosis <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="dosis" placeholder="Ej: 1 comprimido" required>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Frecuencia <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="frecuencia" required>
+                                            <option value="">Seleccionar...</option>
+                                            <option>Cada 4 horas</option>
+                                            <option>Cada 6 horas</option>
+                                            <option>Cada 8 horas</option>
+                                            <option>Cada 12 horas</option>
+                                            <option>Una vez al día</option>
+                                            <option>Con las comidas</option>
+                                            <option>Según necesidad</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Duración <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="duracion" placeholder="Ej: 5 días" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Indicaciones adicionales</label>
+                                    <textarea class="form-control" id="indicaciones" rows="3"
+                                        placeholder="Instrucciones especiales para el paciente..."></textarea>
+                                </div>
+                                <div class="alert alert-warning no-print">
+                                    <i class="bi bi-shield-exclamation"></i>
+                                    Solo el médico tratante puede emitir recetas. Esta acción queda registrada.
+                                </div>
+                                <button type="submit" class="btn btn-info w-100 p-3" id="btnEmitir">
+                                    💊 Emitir Receta y Generar QR
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vista de receta emitida (con QR) -->
+                <div id="receta-emitida" class="d-none">
+                    <div class="receta-impresa">
+                        <div class="row align-items-center mb-3">
+                            <div class="col">
+                                <h3 class="mb-0 text-primary">🏥 Clínica Bienestar</h3>
+                                <small class="text-muted">Receta Médica Electrónica</small>
+                            </div>
+                            <div class="col-auto text-end">
+                                <div id="qr-container"></div>
+                                <small class="text-muted d-block mt-1">Escanea para verificar</small>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row mb-2">
+                            <div class="col-md-6"><strong>Paciente:</strong> <span id="r-nombre"></span></div>
+                            <div class="col-md-6"><strong>RUT:</strong> <span id="r-rut"></span></div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6"><strong>Médico:</strong> <span id="r-medico"></span></div>
+                            <div class="col-md-6"><strong>Fecha:</strong> <span id="r-fecha"></span></div>
+                        </div>
+                        <hr>
+                        <h5>Prescripción:</h5>
+                        <table class="table table-bordered">
+                            <tr><th>Medicamento</th><td id="r-medicamento"></td></tr>
+                            <tr><th>Dosis</th><td id="r-dosis"></td></tr>
+                            <tr><th>Frecuencia</th><td id="r-frecuencia"></td></tr>
+                            <tr><th>Duración</th><td id="r-duracion"></td></tr>
+                        </table>
+                        <div id="r-indicaciones-block" class="d-none">
+                            <strong>Indicaciones:</strong>
+                            <p id="r-indicaciones" class="mt-1"></p>
+                        </div>
+                        <hr>
+                        <small class="text-muted">ID Receta: <span id="r-id"></span></small>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3 no-print">
+                        <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir Receta</button>
+                        <a href="pacientes.html" class="btn btn-outline-secondary">← Volver a Pacientes</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center mt-5 p-3 bg-light no-print"><p>Inacap</p></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Solo médico y admin pueden emitir recetas
+            auth.protectPageByRole(['medico', 'admin']);
+            auth.displayUserInfo();
+
+            // Leer parámetros de URL
+            const params     = new URLSearchParams(window.location.search);
+            const patient_id = params.get('patient_id');
+            const rut        = params.get('rut');
+            const nombre     = params.get('nombre');
+
+            if (!patient_id) {
+                alert('Paciente no especificado. Vuelve a la lista.');
+                window.location.href = 'pacientes.html';
+                return;
+            }
+
+            document.getElementById('lbl-nombre').textContent = nombre || '—';
+            document.getElementById('lbl-rut').textContent    = rut   || '—';
+
+            // ── ENVÍO FORMULARIO ────────────────────────────────────
+            document.getElementById('recetaForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const medicamento  = document.getElementById('medicamento').value.trim();
+                const dosis        = document.getElementById('dosis').value.trim();
+                const frecuencia   = document.getElementById('frecuencia').value;
+                const duracion     = document.getElementById('duracion').value.trim();
+                const indicaciones = document.getElementById('indicaciones').value.trim();
+
+                if (!medicamento || !dosis || !frecuencia || !duracion) {
+                    alert('Por favor completa todos los campos obligatorios.');
+                    return;
+                }
+
+                const btn = document.getElementById('btnEmitir');
+                btn.disabled = true;
+                btn.textContent = 'Guardando...';
+
+                // Generar ID único para la receta
+                const recetaId = 'REC-' + Date.now() + '-' + Math.random().toString(36).substr(2,6).toUpperCase();
+                const medico   = auth.getCurrentUser()?.nombre || auth.getUsername();
+                const fecha    = new Date().toLocaleString('es-CL');
+
+                // URL pública de la receta (para el QR)
+                const qrUrl = `${window.location.origin}/ver-receta.html?id=${recetaId}`;
+
+                // Guardar en Supabase
+                const { data, error } = await _supabase
+                    .from('recetas')
+                    .insert([{
+                        receta_id:       recetaId,
+                        patient_id:      parseInt(patient_id),
+                        rut_paciente:    rut,
+                        nombre_paciente: nombre,
+                        medicamento,
+                        dosis,
+                        frecuencia,
+                        duracion,
+                        indicaciones,
+                        medico,
+                        qr_url: qrUrl
+                    }])
+                    .select()
+                    .single();
+
+                if (error) {
+                    alert('Error al guardar la receta: ' + error.message);
+                    btn.disabled = false;
+                    btn.textContent = '💊 Emitir Receta y Generar QR';
+                    return;
+                }
+
+                // Mostrar receta emitida
+                document.getElementById('form-section').classList.add('d-none');
+                document.getElementById('receta-emitida').classList.remove('d-none');
+
+                document.getElementById('r-nombre').textContent    = nombre;
+                document.getElementById('r-rut').textContent       = rut;
+                document.getElementById('r-medico').textContent    = medico;
+                document.getElementById('r-fecha').textContent     = fecha;
+                document.getElementById('r-medicamento').textContent = medicamento;
+                document.getElementById('r-dosis').textContent     = dosis;
+                document.getElementById('r-frecuencia').textContent = frecuencia;
+                document.getElementById('r-duracion').textContent  = duracion;
+                document.getElementById('r-id').textContent        = recetaId;
+
+                if (indicaciones) {
+                    document.getElementById('r-indicaciones').textContent = indicaciones;
+                    document.getElementById('r-indicaciones-block').classList.remove('d-none');
+                }
+
+                // Generar QR
+                new QRCode(document.getElementById('qr-container'), {
+                    text:   qrUrl,
+                    width:  120,
+                    height: 120,
+                    colorDark:  '#0d6efd',
+                    colorLight: '#ffffff'
+                });
+            });
+        });
+
+        function logoutUser(e) {
+            e.preventDefault();
+            if (confirm('¿Desea cerrar sesión?')) {
+                auth.logout();
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+</html>

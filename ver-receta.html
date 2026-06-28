@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clínica Bienestar - Ver Receta</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/favicon_clinica.png">
+    <style>
+        .receta-card { border: 2px solid #0d6efd; border-radius: 12px; max-width: 600px; margin: auto; }
+        @media print { .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary no-print">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">🏥 Clínica Bienestar</a>
+        </div>
+    </nav>
+
+    <main class="container mt-5">
+        <div id="cargando" class="text-center py-5">
+            <div class="spinner-border text-primary"></div>
+            <p class="mt-2">Verificando receta...</p>
+        </div>
+
+        <div id="receta-content" class="d-none">
+            <div class="receta-card p-4 shadow">
+                <div class="text-center mb-4">
+                    <h3 class="text-primary">🏥 Clínica Bienestar</h3>
+                    <p class="text-muted mb-0">Receta Médica Electrónica Verificada</p>
+                    <span class="badge bg-success mt-1">✓ Receta válida</span>
+                </div>
+                <hr>
+                <div class="row mb-3">
+                    <div class="col-6"><strong>Paciente:</strong><br><span id="v-nombre"></span></div>
+                    <div class="col-6"><strong>RUT:</strong><br><span id="v-rut"></span></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6"><strong>Médico tratante:</strong><br><span id="v-medico"></span></div>
+                    <div class="col-6"><strong>Fecha emisión:</strong><br><span id="v-fecha"></span></div>
+                </div>
+                <hr>
+                <h5>Prescripción</h5>
+                <table class="table table-bordered">
+                    <tr><th width="35%">Medicamento</th><td id="v-medicamento"></td></tr>
+                    <tr><th>Dosis</th><td id="v-dosis"></td></tr>
+                    <tr><th>Frecuencia</th><td id="v-frecuencia"></td></tr>
+                    <tr><th>Duración</th><td id="v-duracion"></td></tr>
+                </table>
+                <div id="v-indicaciones-block" class="d-none">
+                    <strong>Indicaciones:</strong>
+                    <p id="v-indicaciones" class="mt-1 text-muted"></p>
+                </div>
+                <hr>
+                <small class="text-muted">ID: <span id="v-id"></span></small>
+            </div>
+            <div class="text-center mt-3 no-print">
+                <button class="btn btn-outline-primary" onclick="window.print()">🖨️ Imprimir</button>
+                <a href="index.html" class="btn btn-outline-secondary ms-2">Volver al Inicio</a>
+            </div>
+        </div>
+
+        <div id="receta-error" class="d-none">
+            <div class="alert alert-danger text-center">
+                <h4>❌ Receta no encontrada</h4>
+                <p>El código QR no corresponde a ninguna receta registrada.</p>
+                <a href="index.html" class="btn btn-outline-danger">Volver al Inicio</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params   = new URLSearchParams(window.location.search);
+            const recetaId = params.get('id');
+
+            if (!recetaId) {
+                document.getElementById('cargando').classList.add('d-none');
+                document.getElementById('receta-error').classList.remove('d-none');
+                return;
+            }
+
+            const { data, error } = await _supabase
+                .from('recetas')
+                .select('*')
+                .eq('receta_id', recetaId)
+                .single();
+
+            document.getElementById('cargando').classList.add('d-none');
+
+            if (error || !data) {
+                document.getElementById('receta-error').classList.remove('d-none');
+                return;
+            }
+
+            document.getElementById('v-nombre').textContent      = data.nombre_paciente;
+            document.getElementById('v-rut').textContent         = data.rut_paciente;
+            document.getElementById('v-medico').textContent      = data.medico;
+            document.getElementById('v-fecha').textContent       = new Date(data.created_at).toLocaleString('es-CL');
+            document.getElementById('v-medicamento').textContent = data.medicamento;
+            document.getElementById('v-dosis').textContent       = data.dosis;
+            document.getElementById('v-frecuencia').textContent  = data.frecuencia;
+            document.getElementById('v-duracion').textContent    = data.duracion;
+            document.getElementById('v-id').textContent          = data.receta_id;
+
+            if (data.indicaciones) {
+                document.getElementById('v-indicaciones').textContent = data.indicaciones;
+                document.getElementById('v-indicaciones-block').classList.remove('d-none');
+            }
+
+            document.getElementById('receta-content').classList.remove('d-none');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clínica Bienestar - Portal del Paciente</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/favicon_clinica.png">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        .portal-card { max-width: 680px; margin: auto; }
+        .seccion-header { background: #e7f3ff; border-left: 4px solid #0d6efd; padding: 10px 16px; border-radius: 4px; margin-bottom: 1rem; }
+        .receta-item { border: 1px solid #dee2e6; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+        .receta-item:hover { background: #f8f9fa; }
+        .qr-mini canvas, .qr-mini img { width: 80px !important; height: 80px !important; }
+        .estado-badge { font-size: 0.8rem; }
+        .triage-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <img src="images/logo.png" alt="Logo" class="navbar-logo">
+                <span class="ms-2">Clínica Bienestar</span>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link text-white" href="solicitar-hora.html">📅 Solicitar Hora</a>
+                <a class="nav-link text-white" href="login.html">Personal Médico</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5">
+        <div class="portal-card">
+
+            <!-- ── PASO 1: INGRESAR RUT ────────────────────────── -->
+            <div id="paso-rut">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">👤 Portal del Paciente</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Ingresa tu RUT para ver tu historial de atenciones, recetas y el estado de tus solicitudes.</p>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">RUN / RUT</label>
+                            <input type="text" class="form-control form-control-lg" id="rutInput"
+                                placeholder="12.345.678-9" maxlength="12">
+                            <div class="form-text">Formato: 12.345.678-9</div>
+                        </div>
+                        <div class="alert alert-danger d-none" id="rut-error"></div>
+                        <button class="btn btn-primary w-100 p-3" id="btnConsultar">
+                            🔍 Consultar mis Atenciones
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── PASO 2: RESULTADO ───────────────────────────── -->
+            <div id="paso-resultado" class="d-none">
+
+                <!-- Encabezado paciente -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h3 id="res-nombre" class="mb-0"></h3>
+                        <span class="text-muted">RUT: <span id="res-rut"></span></span>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="volver()">← Consultar otro RUT</button>
+                </div>
+
+                <!-- Mis atenciones -->
+                <div class="seccion-header">
+                    <h5 class="mb-0">🏥 Mis Atenciones (<span id="cnt-atenciones">0</span>)</h5>
+                </div>
+                <div id="lista-atenciones">
+                    <div class="text-center py-3 text-muted">No hay atenciones registradas.</div>
+                </div>
+
+                <!-- Mis recetas -->
+                <div class="seccion-header mt-4">
+                    <h5 class="mb-0">💊 Mis Recetas (<span id="cnt-recetas">0</span>)</h5>
+                </div>
+                <div id="lista-recetas">
+                    <div class="text-center py-3 text-muted">No hay recetas emitidas.</div>
+                </div>
+
+                <!-- Estado de solicitudes -->
+                <div class="seccion-header mt-4">
+                    <h5 class="mb-0">📅 Estado de Solicitudes de Hora (<span id="cnt-solicitudes">0</span>)</h5>
+                </div>
+                <div id="lista-solicitudes">
+                    <div class="text-center py-3 text-muted">No hay solicitudes registradas.</div>
+                </div>
+
+            </div>
+
+            <!-- Cargando -->
+            <div id="paso-cargando" class="d-none text-center py-5">
+                <div class="spinner-border text-primary mb-3"></div>
+                <p class="text-muted">Buscando tus atenciones...</p>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="text-center mt-5 p-3 bg-light"><p>Inacap</p></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script>
+        // Formateo RUT en tiempo real
+        document.getElementById('rutInput').addEventListener('input', (e) => {
+            let rut  = e.target.value.replace(/[^0-9kK]/g, '').slice(0, 10);
+            let body = rut.slice(0, -1);
+            let dv   = rut.slice(-1);
+            if (rut.length > 1) {
+                body = body.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+                e.target.value = `${body}-${dv}`;
+            } else {
+                e.target.value = rut;
+            }
+        });
+
+        document.getElementById('btnConsultar').addEventListener('click', consultar);
+        document.getElementById('rutInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') consultar();
+        });
+
+        async function consultar() {
+            const rut = document.getElementById('rutInput').value.trim();
+            const errEl = document.getElementById('rut-error');
+            errEl.classList.add('d-none');
+
+            if (!rut || rut.length < 3) {
+                errEl.textContent = 'Ingresa un RUT válido.';
+                errEl.classList.remove('d-none');
+                return;
+            }
+
+            // Mostrar cargando
+            document.getElementById('paso-rut').classList.add('d-none');
+            document.getElementById('paso-cargando').classList.remove('d-none');
+
+            try {
+                // Buscar en paralelo: pacientes, recetas y solicitudes
+                const [resPac, resRec, resSol] = await Promise.all([
+                    _supabase.from('pacientes').select('*').eq('rut', rut).order('created_at', { ascending: false }),
+                    _supabase.from('recetas').select('*').eq('rut_paciente', rut).order('created_at', { ascending: false }),
+                    _supabase.from('solicitudes_hora').select('*').eq('rut', rut).order('created_at', { ascending: false })
+                ]);
+
+                const pacientes   = resPac.data  || [];
+                const recetas     = resRec.data   || [];
+                const solicitudes = resSol.data   || [];
+
+                document.getElementById('paso-cargando').classList.add('d-none');
+
+                if (pacientes.length === 0 && recetas.length === 0 && solicitudes.length === 0) {
+                    // Volver con error
+                    document.getElementById('paso-rut').classList.remove('d-none');
+                    errEl.textContent = 'No se encontraron registros para este RUT. Verifica que esté escrito correctamente.';
+                    errEl.classList.remove('d-none');
+                    return;
+                }
+
+                // Nombre desde primera atención o primera solicitud
+                let nombrePaciente = '—';
+                if (pacientes.length > 0) {
+                    const p = pacientes[0];
+                    nombrePaciente = `${p.nombre} ${p.apellido_paterno} ${p.apellido_materno}`;
+                } else if (solicitudes.length > 0) {
+                    const s = solicitudes[0];
+                    nombrePaciente = `${s.nombre} ${s.apellido_paterno} ${s.apellido_materno}`;
+                } else if (recetas.length > 0) {
+                    nombrePaciente = recetas[0].nombre_paciente;
+                }
+
+                document.getElementById('res-nombre').textContent = nombrePaciente;
+                document.getElementById('res-rut').textContent    = rut;
+
+                // ── ATENCIONES ──────────────────────────────────────
+                document.getElementById('cnt-atenciones').textContent = pacientes.length;
+                const listaAt = document.getElementById('lista-atenciones');
+                if (pacientes.length === 0) {
+                    listaAt.innerHTML = '<div class="text-center py-3 text-muted">Sin atenciones previas.</div>';
+                } else {
+                    const triageColor = { 'Roja': '#dc3545', 'Amarillo': '#ffc107', 'Verde': '#198754' };
+                    listaAt.innerHTML = pacientes.map(p => `
+                        <div class="receta-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <span class="triage-dot me-1"
+                                          style="background:${triageColor[p.urgencia]||'#6c757d'}"></span>
+                                    <strong>Atención — ${p.fecha_registro || new Date(p.created_at).toLocaleString('es-CL')}</strong>
+                                </div>
+                                <span class="badge" style="background:${triageColor[p.urgencia]||'#6c757d'}">${p.urgencia || 'Sin clasificar'}</span>
+                            </div>
+                            <div class="mt-2 text-muted small">
+                                <strong>Síntomas:</strong> ${(p.sintomas||[]).join(', ') || 'No registrados'}<br>
+                                ${p.diagnostico ? `<strong>Diagnóstico:</strong> ${p.diagnostico}` : ''}
+                            </div>
+                        </div>`).join('');
+                }
+
+                // ── RECETAS ──────────────────────────────────────────
+                document.getElementById('cnt-recetas').textContent = recetas.length;
+                const listaRec = document.getElementById('lista-recetas');
+                if (recetas.length === 0) {
+                    listaRec.innerHTML = '<div class="text-center py-3 text-muted">Sin recetas emitidas.</div>';
+                } else {
+                    listaRec.innerHTML = recetas.map((r, i) => `
+                        <div class="receta-item d-flex justify-content-between align-items-start">
+                            <div style="flex:1">
+                                <strong>💊 ${r.medicamento}</strong>
+                                <div class="text-muted small mt-1">
+                                    Dosis: ${r.dosis} — ${r.frecuencia} — ${r.duracion}<br>
+                                    Médico: ${r.medico} | ${new Date(r.created_at).toLocaleString('es-CL')}
+                                </div>
+                                ${r.indicaciones ? `<div class="text-muted small mt-1">📝 ${r.indicaciones}</div>` : ''}
+                                <div class="mt-1">
+                                    <a href="${r.qr_url}" target="_blank" class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-qr-code"></i> Ver Receta
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="qr-mini ms-3" id="qr-${i}"></div>
+                        </div>`).join('');
+
+                    // Generar QR para cada receta
+                    recetas.forEach((r, i) => {
+                        if (r.qr_url) {
+                            new QRCode(document.getElementById(`qr-${i}`), {
+                                text: r.qr_url, width: 80, height: 80,
+                                colorDark: '#0d6efd', colorLight: '#ffffff'
+                            });
+                        }
+                    });
+                }
+
+                // ── SOLICITUDES DE HORA ──────────────────────────────
+                document.getElementById('cnt-solicitudes').textContent = solicitudes.length;
+                const listaSol = document.getElementById('lista-solicitudes');
+                if (solicitudes.length === 0) {
+                    listaSol.innerHTML = '<div class="text-center py-3 text-muted">Sin solicitudes registradas.</div>';
+                } else {
+                    const estadoColor = { pendiente: 'warning', confirmada: 'success', atendida: 'secondary' };
+                    const estadoIcon  = { pendiente: '⏳', confirmada: '✅', atendida: '🏁' };
+                    listaSol.innerHTML = solicitudes.map(s => `
+                        <div class="receta-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <strong>${estadoIcon[s.estado]||'📋'} Solicitud — ${new Date(s.created_at).toLocaleString('es-CL')}</strong>
+                                <span class="badge bg-${estadoColor[s.estado]||'secondary'} estado-badge text-capitalize">${s.estado}</span>
+                            </div>
+                            <div class="text-muted small mt-1">
+                                <strong>Consultorio:</strong> ${s.consultorio || '—'} (${s.comuna || '—'})<br>
+                                <strong>Motivo:</strong> ${s.motivo || '—'}<br>
+                                <strong>Tiempo espera est.:</strong> ${s.tiempo_espera_promedio ? s.tiempo_espera_promedio + ' min' : '—'}
+                            </div>
+                        </div>`).join('');
+                }
+
+                // Mostrar resultados
+                document.getElementById('paso-resultado').classList.remove('d-none');
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('paso-cargando').classList.add('d-none');
+                document.getElementById('paso-rut').classList.remove('d-none');
+                errEl.textContent = 'Error de conexión. Intenta nuevamente.';
+                errEl.classList.remove('d-none');
+            }
+        }
+
+        function volver() {
+            document.getElementById('paso-resultado').classList.add('d-none');
+            document.getElementById('paso-rut').classList.remove('d-none');
+            document.getElementById('rutInput').value = '';
+        }
+    </script>
+</body>
+</html>
