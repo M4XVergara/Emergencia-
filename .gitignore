@@ -1,0 +1,25 @@
+# ── Credenciales y variables de entorno ──────────────────────
+.env
+.env.local
+.env.production
+*.env
+
+# ── Archivos del sistema operativo ───────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editores de código ────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.user
+
+# ── Node (por si más adelante agregan dependencias) ───────────
+node_modules/
+npm-debug.log*
+
+# ── Archivos de respaldo ──────────────────────────────────────
+*.bak
+*.tmp
+*.zip
