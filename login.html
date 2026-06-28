@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clínica Bienestar - Login Personal Médico</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/favicon_clinica.png">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        }
+        .login-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .login-header h1 {
+            color: #0d6efd;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .login-header p {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+        .btn-login {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        .alert {
+            display: none;
+        }
+        .alert.show {
+            display: block;
+        }
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .back-link a {
+            color: #0d6efd;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .credentials-info {
+            background-color: #e7f3ff;
+            border-left: 4px solid #0d6efd;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .credentials-info strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #0d6efd;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>🏥 Clínica Bienestar</h1>
+            <p>Acceso Personal Médico</p>
+        </div>
+
+        <div class="credentials-info" style="display: none;">
+            <strong>Credenciales de Demostración:</strong>
+            <small>
+                Usuario: <strong>doctor</strong> | Contraseña: <strong>clinic123</strong><br>
+                Usuario: <strong>enfermera</strong> | Contraseña: <strong>clinic123</strong><br>
+                Usuario: <strong>admin</strong> | Contraseña: <strong>admin2026</strong>
+            </small>
+        </div>
+
+        <div class="alert alert-danger" id="error-message" role="alert"></div>
+        <div class="alert alert-success" id="success-message" role="alert"></div>
+
+        <form id="loginForm">
+            <div class="mb-3">
+                <label for="username" class="form-label">Usuario</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    id="username" 
+                    placeholder="Ingrese su usuario"
+                    required
+                >
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label">Contraseña</label>
+                <input 
+                    type="password" 
+                    class="form-control" 
+                    id="password" 
+                    placeholder="Ingrese su contraseña"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-login">
+                Iniciar Sesión
+            </button>
+        </form>
+
+        <div class="back-link">
+            <a href="index.html">← Volver al Inicio</a>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('error-message');
+            const successMsg = document.getElementById('success-message');
+
+            // Limpiar mensajes previos
+            errorMsg.classList.remove('show');
+            successMsg.classList.remove('show');
+            errorMsg.textContent = '';
+            successMsg.textContent = '';
+
+            // Intentar login
+            const result = auth.login(username, password);
+
+            if (result.success) {
+                successMsg.textContent = `✓ ${result.message}`;
+                successMsg.classList.add('show');
+                
+                // Redirigir después de 1.5 segundos
+                setTimeout(() => {
+                    window.location.href = 'registro.html';
+                }, 1500);
+            } else {
+                errorMsg.textContent = `✗ ${result.message}`;
+                errorMsg.classList.add('show');
+                document.getElementById('password').value = '';
+                document.getElementById('password').focus();
+            }
+        });
+
+        // Si ya está autenticado, redirigir a registro
+        if (auth.isAuthenticated()) {
+            window.location.href = 'registro.html';
+        }
+    </script>
+</body>
+</html>

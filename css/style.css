@@ -1,0 +1,154 @@
+/* --- ESTILOS GENERALES --- */
+/* Estos estilos se aplican a múltiples elementos a lo largo de todo el sitio. */
+
+body {
+    /* Un color de fondo gris muy claro para que la página no sea blanco puro. */
+    background-color: #f8f9fa;
+    /* Una lista de fuentes "pila de sistema". El navegador usará la primera que encuentre en el sistema del usuario. Es una práctica moderna y eficiente. */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    /* Aumenta el espacio entre líneas de texto para mejorar la legibilidad. */
+    line-height: 1.6;
+}
+
+main {
+    /* Un truco para asegurar que el contenido principal ocupe al menos el alto de la pantalla menos la altura de la barra de navegación y el pie de página, evitando que el footer "suba" en páginas con poco contenido. */
+    min-height: calc(100vh - 140px);
+}
+
+h2 {
+    /* Color de texto oscuro para los títulos principales. */
+    color: #343a40;
+}
+
+.navbar {
+    /* Añade una sombra sutil debajo de la barra de navegación para darle profundidad. */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#registroForm {
+    /* Estilos para que el formulario se vea como un panel o tarjeta distintiva. */
+    background-color: #ffffff; /* Fondo blanco. */
+    padding: 2.5rem; /* Espaciado interno. */
+    border-radius: 0.5rem; /* Bordes redondeados. */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Sombra suave. */
+}
+
+.card {
+    /* Prepara la tarjeta para una animación suave cuando el mouse pase por encima. */
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    /* Quitamos el borde por defecto de Bootstrap para que el nuestro (de color) resalte más. */
+    border: none;
+}
+
+.card:hover {
+    /* Efecto al pasar el mouse: la tarjeta se "eleva" ligeramente y la sombra se hace más pronunciada. */
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    /* Estilo para la cabecera de las tarjetas de paciente (donde va la urgencia). */
+    font-weight: bold; /* Texto en negrita. */
+    font-size: 1.1em; /* Texto un poco más grande. */
+}
+
+.card-body p {
+    /* Reduce el margen inferior de los párrafos dentro de la tarjeta para que estén más juntos. */
+    margin-bottom: 0.5rem;
+}
+
+.card-footer {
+    /* Estilo para el pie de las tarjetas (donde va la fecha de registro). */
+    background-color: #f1f1f1; /* Fondo gris claro. */
+    font-size: 0.85em; /* Texto más pequeño. */
+}
+
+.alert ul {
+    /* Estilos para la lista de errores dentro de las alertas. */
+    margin-bottom: 0; /* Quita el margen inferior de la lista. */
+    padding-left: 1.2rem; /* Reduce el espaciado izquierdo. */
+}
+
+.alert li {
+    /* Alinea el texto de cada error a la izquierda. */
+    text-align: left;
+}
+
+footer {
+    /* Estilos para el pie de página. */
+    border-top: 1px solid #dee2e6; /* Línea superior de separación. */
+    color: #6c757d; /* Color de texto gris. */
+}
+
+/* --- ESTILO PARA EL LOGO --- */
+
+.navbar-logo {
+    /* Define la altura del logo en la barra de navegación. */
+    height: 40px;
+    /* 'width: auto' asegura que el ancho se ajuste automáticamente para mantener la proporción original de la imagen. */
+    width: auto;
+}
+
+/* --- ESTILOS PARA LA PÁGINA DE INICIO --- */
+
+.hero-section {
+    position: relative; /* Esencial para que el posicionamiento de la capa '.hero-overlay' funcione. */
+    height: 60vh; /* La sección ocupará el 60% de la altura de la ventana del navegador. */
+    /* Define la imagen de fondo. La ruta '../' significa "subir un nivel de carpeta" desde /css/ para luego entrar a /images/. */
+    background-image: url('../images/hero-background.jpg');
+    background-size: cover; /* La imagen se estirará para cubrir todo el espacio disponible sin deformarse. */
+    background-position: center; /* Centra la imagen para que el foco principal sea visible. */
+}
+
+.hero-overlay {
+    /* Esta es la capa oscura semitransparente que va sobre la imagen de fondo. */
+    position: absolute; /* Se posiciona con respecto a su padre '.hero-section'. */
+    top: 0;
+    left: 0;
+    width: 100%; /* Ocupa todo el ancho y alto del padre. */
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Color negro con 50% de opacidad. */
+    z-index: 1; /* Se asegura de que esté por encima de la imagen de fondo. */
+}
+
+.hero-section .container {
+    /* El contenedor del texto y el botón. */
+    z-index: 2; /* Se asegura de que esté por encima de la capa oscura '.hero-overlay'. */
+}
+
+.info-card {
+    /* Estilos para las 3 tarjetas de información de la página de inicio. */
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.info-card:hover {
+    /* Efecto de "elevación" al pasar el mouse por encima. */
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.info-card i {
+    /* Estilo para los iconos de Bootstrap dentro de las tarjetas. */
+    font-size: 3rem; /* Tamaño del icono. */
+    color: #0d6efd; /* Color azul primario de Bootstrap. */
+}
+
+body { /* --- IMAGEN DE FONDO SITIOS WEB --- */
+    background-image: url('../images/hero-background.png'); /* Ruta a la imagen de fondo. */
+    /* Asegura que la imagen cubra todo el fondo de la página. */
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    margin: 0;
+    padding: 0;
+}
+
+/* --- ESTILOS PARA LA PÁGINA DE REGISTRO --- */
+.input-error {
+    border: 2px solid red !important;
+    box-shadow: 0 0 5px red;
+}
+/* Estilo para el botón de registrar paciente */
