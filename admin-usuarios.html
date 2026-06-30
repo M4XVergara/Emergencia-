@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clínica Bienestar - Gestión de Usuarios</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/favicon_clinica.png">
+    <style>
+        .rol-badge-admin        { background: #534AB7; color: #fff; }
+        .rol-badge-medico       { background: #0F6E56; color: #fff; }
+        .rol-badge-recepcionista{ background: #185FA5; color: #fff; }
+        .table th { background: #f8f9fa; }
+        .user-row td { vertical-align: middle; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <img src="images/logo.png" alt="Logo" class="navbar-logo">
+                <span class="ms-2">Clínica Bienestar</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto" id="user-info"></ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="registro.html">Registro</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pacientes.html">Pacientes</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="admin-usuarios.html">👥 Usuarios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="logoutUser(event)">Cerrar Sesión</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">👥 Gestión de Usuarios del Personal</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalUsuario" onclick="abrirModalNuevo()">
+                <i class="bi bi-person-plus"></i> Nuevo Usuario
+            </button>
+        </div>
+
+        <div id="mensaje-pagina"></div>
+
+        <!-- Tabla de usuarios -->
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div id="tabla-loading" class="text-center py-4">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="mt-2 text-muted">Cargando usuarios...</p>
+                </div>
+                <table class="table table-hover mb-0 d-none" id="tabla-usuarios">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Nombre</th>
+                            <th>Usuario</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th class="text-end pe-3">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-usuarios"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Crear / Editar Usuario -->
+    <div class="modal fade" id="modalUsuario" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modal-titulo">Nuevo Usuario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formUsuario" novalidate>
+                        <input type="hidden" id="userId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="uNombre" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Apellido <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="uApellido" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="uEmail" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Usuario <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="uUsername" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" id="label-password">
+                                    Contraseña <span class="text-danger">*</span>
+                                </label>
+                                <input type="password" class="form-control" id="uPassword">
+                                <div class="form-text" id="hint-password"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Rol <span class="text-danger">*</span></label>
+                            <select class="form-select" id="uRol" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="admin">Administrador</option>
+                                <option value="medico">Médico</option>
+                                <option value="recepcionista">Recepcionista</option>
+                            </select>
+                        </div>
+                        <div class="alert alert-danger d-none" id="modal-error"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardar" onclick="guardarUsuario()">
+                        Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center mt-5 p-3 bg-light"><p>Inacap</p></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        let _modoEdicion = false;
+        let _editId      = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Solo admin puede entrar
+            auth.protectPageByRole(['admin']);
+            auth.displayUserInfo();
+            await cargarUsuarios();
+        });
+
+        // ── CARGAR TABLA ──────────────────────────────────────────
+        async function cargarUsuarios() {
+            const { data, error } = await _supabase
+                .from('usuarios')
+                .select('*')
+                .order('created_at', { ascending: true });
+
+            document.getElementById('tabla-loading').classList.add('d-none');
+            document.getElementById('tabla-usuarios').classList.remove('d-none');
+
+            if (error || !data) {
+                mostrarMensaje('Error al cargar usuarios: ' + (error?.message || ''), 'alert-danger');
+                return;
+            }
+
+            const rolLabel = { admin: 'Administrador', medico: 'Médico', recepcionista: 'Recepcionista' };
+            const tbody = document.getElementById('tbody-usuarios');
+            tbody.innerHTML = '';
+
+            data.forEach(u => {
+                const fila = document.createElement('tr');
+                fila.className = 'user-row';
+                fila.innerHTML = `
+                    <td class="ps-3">
+                        <strong>${u.nombre} ${u.apellido}</strong>
+                    </td>
+                    <td><code>${u.username}</code></td>
+                    <td>${u.email}</td>
+                    <td>
+                        <span class="badge rol-badge-${u.rol} px-2 py-1">
+                            ${rolLabel[u.rol] || u.rol}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge ${u.activo ? 'bg-success' : 'bg-secondary'}">
+                            ${u.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td class="text-end pe-3">
+                        <button class="btn btn-sm btn-outline-primary me-1"
+                            onclick="abrirModalEditar(${u.id})">
+                            <i class="bi bi-pencil"></i> Editar
+                        </button>
+                        <button class="btn btn-sm ${u.activo ? 'btn-outline-warning' : 'btn-outline-success'}"
+                            onclick="toggleActivo(${u.id}, ${u.activo})">
+                            ${u.activo ? '<i class="bi bi-pause-circle"></i> Desactivar' : '<i class="bi bi-play-circle"></i> Activar'}
+                        </button>
+                    </td>`;
+                tbody.appendChild(fila);
+            });
+        }
+
+        // ── MODAL NUEVO ───────────────────────────────────────────
+        function abrirModalNuevo() {
+            _modoEdicion = false;
+            _editId      = null;
+            document.getElementById('modal-titulo').textContent      = 'Nuevo Usuario';
+            document.getElementById('formUsuario').reset();
+            document.getElementById('userId').value                   = '';
+            document.getElementById('uPassword').required             = true;
+            document.getElementById('label-password').innerHTML       = 'Contraseña <span class="text-danger">*</span>';
+            document.getElementById('hint-password').textContent      = '';
+            document.getElementById('modal-error').classList.add('d-none');
+        }
+
+        // ── MODAL EDITAR ──────────────────────────────────────────
+        async function abrirModalEditar(id) {
+            _modoEdicion = true;
+            _editId      = id;
+
+            const { data } = await _supabase.from('usuarios').select('*').eq('id', id).single();
+            if (!data) return;
+
+            document.getElementById('modal-titulo').textContent   = 'Editar Usuario';
+            document.getElementById('userId').value               = data.id;
+            document.getElementById('uNombre').value              = data.nombre;
+            document.getElementById('uApellido').value            = data.apellido;
+            document.getElementById('uEmail').value               = data.email;
+            document.getElementById('uUsername').value            = data.username;
+            document.getElementById('uRol').value                 = data.rol;
+            document.getElementById('uPassword').value            = '';
+            document.getElementById('uPassword').required         = false;
+            document.getElementById('label-password').innerHTML   = 'Nueva Contraseña';
+            document.getElementById('hint-password').textContent  = 'Dejar vacío para mantener la actual';
+            document.getElementById('modal-error').classList.add('d-none');
+
+            new bootstrap.Modal(document.getElementById('modalUsuario')).show();
+        }
+
+        // ── GUARDAR USUARIO ───────────────────────────────────────
+        async function guardarUsuario() {
+            const errEl   = document.getElementById('modal-error');
+            const nombre  = document.getElementById('uNombre').value.trim();
+            const apellido= document.getElementById('uApellido').value.trim();
+            const email   = document.getElementById('uEmail').value.trim();
+            const username= document.getElementById('uUsername').value.trim();
+            const password= document.getElementById('uPassword').value;
+            const rol     = document.getElementById('uRol').value;
+
+            errEl.classList.add('d-none');
+
+            if (!nombre || !apellido || !email || !username || !rol) {
+                errEl.textContent = 'Completa todos los campos obligatorios.';
+                errEl.classList.remove('d-none');
+                return;
+            }
+            if (!_modoEdicion && !password) {
+                errEl.textContent = 'La contraseña es obligatoria para nuevos usuarios.';
+                errEl.classList.remove('d-none');
+                return;
+            }
+
+            const btn = document.getElementById('btnGuardar');
+            btn.disabled = true;
+            btn.textContent = 'Guardando...';
+
+            let error;
+
+            if (_modoEdicion) {
+                const datos = { nombre, apellido, email, username, rol };
+                if (password) datos.password = password;
+                ({ error } = await _supabase.from('usuarios').update(datos).eq('id', _editId));
+            } else {
+                ({ error } = await _supabase.from('usuarios').insert([{
+                    nombre, apellido, email, username, password, rol, activo: true
+                }]));
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Guardar';
+
+            if (error) {
+                errEl.textContent = error.message.includes('unique')
+                    ? 'El usuario o email ya existe. Elige uno diferente.'
+                    : 'Error al guardar: ' + error.message;
+                errEl.classList.remove('d-none');
+                return;
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('modalUsuario'))?.hide();
+            mostrarMensaje(
+                _modoEdicion ? 'Usuario actualizado correctamente.' : 'Usuario creado correctamente.',
+                'alert-success'
+            );
+            await cargarUsuarios();
+        }
+
+        // ── ACTIVAR / DESACTIVAR ──────────────────────────────────
+        async function toggleActivo(id, estadoActual) {
+            const accion = estadoActual ? 'desactivar' : 'activar';
+            if (!confirm(`¿Deseas ${accion} este usuario?`)) return;
+
+            const { error } = await _supabase
+                .from('usuarios')
+                .update({ activo: !estadoActual })
+                .eq('id', id);
+
+            if (error) {
+                mostrarMensaje('Error al actualizar: ' + error.message, 'alert-danger');
+            } else {
+                mostrarMensaje(`Usuario ${estadoActual ? 'desactivado' : 'activado'} correctamente.`, 'alert-success');
+                await cargarUsuarios();
+            }
+        }
+
+        // ── MENSAJE TEMPORAL ──────────────────────────────────────
+        function mostrarMensaje(texto, clase) {
+            const div = document.getElementById('mensaje-pagina');
+            div.innerHTML = `<div class="alert ${clase} alert-dismissible fade show">
+                ${texto}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>`;
+            setTimeout(() => { div.innerHTML = ''; }, 4000);
+        }
+
+        function logoutUser(e) {
+            e.preventDefault();
+            if (confirm('¿Desea cerrar sesión?')) {
+                auth.logout();
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -12,7 +12,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="index.html">
-                <img src="images/logo.png" alt="Logo Clínica Bienestar" class="navbar-logo">
+                <img src="images/logo.png" alt="Logo" class="navbar-logo">
                 <span class="ms-2">Clínica Bienestar</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -22,9 +22,15 @@
                 <ul class="navbar-nav ms-auto" id="user-info"></ul>
                 <ul class="navbar-nav">
                     <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="registro.html">Registro de Pacientes</a></li>
-                    <li class="nav-item"><a class="nav-link" href="pacientes.html">Pacientes Registrados</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#" onclick="logoutUser(event)">Cerrar Sesión</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="registro.html">Registro</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pacientes.html">Pacientes</a></li>
+                    <!-- Solo admin ve el panel de usuarios -->
+                    <li class="nav-item d-none" id="nav-admin">
+                        <a class="nav-link" href="admin-usuarios.html">👥 Usuarios</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="logoutUser(event)">Cerrar Sesión</a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -32,63 +38,119 @@
 
     <main class="container mt-4">
         <h2 id="form-title">Formulario de Registro de Paciente</h2>
+
         <form id="registroForm" novalidate>
             <h4>Datos Personales</h4>
             <div class="row">
-                <div class="col-md-4 mb-3"><label for="nombre" class="form-label">Nombre</label><input type="text" class="form-control" id="nombre"></div>
-                <div class="col-md-4 mb-3"><label for="apellidoPaterno" class="form-label">Apellido Paterno</label><input type="text" class="form-control" id="apellidoPaterno"></div>
-                <div class="col-md-4 mb-3"><label for="apellidoMaterno" class="form-label">Apellido Materno</label><input type="text" class="form-control" id="apellidoMaterno"></div>
-                <div class="col-md-6 mb-3"><label for="rut" class="form-label">RUN o RUT</label><input type="text" class="form-control" id="rut" maxlength="12"></div>
-                <div class="col-md-3 mb-3"><label for="edad" class="form-label">Edad</label><input type="number" class="form-control" id="edad"></div>
-                <div class="col-md-3 mb-3"><label for="sexo" class="form-label">Sexo</label><select id="sexo" class="form-select"><option value="">Seleccionar...</option><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option><option value="Otro">Otro</option></select></div>
+                <div class="col-md-4 mb-3">
+                    <label for="nombre" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="nombre">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="apellidoPaterno" class="form-label">Apellido Paterno</label>
+                    <input type="text" class="form-control" id="apellidoPaterno">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="apellidoMaterno" class="form-label">Apellido Materno</label>
+                    <input type="text" class="form-control" id="apellidoMaterno">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="rut" class="form-label">RUN o RUT</label>
+                    <input type="text" class="form-control" id="rut" maxlength="12">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="edad" class="form-label">Edad</label>
+                    <input type="number" class="form-control" id="edad" min="1">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="sexo" class="form-label">Sexo</label>
+                    <select id="sexo" class="form-select">
+                        <option value="">Seleccionar...</option>
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
             </div>
+
             <h4 class="mt-4">Signos Vitales</h4>
             <div class="row">
-                <div class="col-md-3 mb-3"><label for="temperatura" class="form-label">Temperatura (°C)</label><input type="number" step="0.1" class="form-control" id="temperatura" min="30" max="45"></div>
-                <div class="col-md-3 mb-3"><label for="presionSistolica" class="form-label">P. Sistólica</label><input type="number" class="form-control" id="presionSistolica" min="50" max="250"></div>
-                <div class="col-md-3 mb-3"><label for="presionDiastolica" class="form-label">P. Diastólica</label><input type="number" class="form-control" id="presionDiastolica" min="30" max="150"></div>
-                <div class="col-md-3 mb-3"><label for="pulsaciones" class="form-label">Pulsaciones (x min)</label><input type="number" class="form-control" id="pulsaciones" min="30" max="220"></div>
-                <div class="col-md-3 mb-3"><label for="spo2" class="form-label">Oxígeno en sangre (%)</label><input type="number" class="form-control" id="spo2" min="70" max="100"></div>
+                <div class="col-md-3 mb-3">
+                    <label for="temperatura" class="form-label">Temperatura (°C)</label>
+                    <input type="number" step="0.1" class="form-control" id="temperatura" min="30" max="45">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="presionSistolica" class="form-label">P. Sistólica</label>
+                    <input type="number" class="form-control" id="presionSistolica" min="50" max="250">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="presionDiastolica" class="form-label">P. Diastólica</label>
+                    <input type="number" class="form-control" id="presionDiastolica" min="30" max="150">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="pulsaciones" class="form-label">Pulsaciones (x min)</label>
+                    <input type="number" class="form-control" id="pulsaciones" min="30" max="220">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="spo2" class="form-label">Oxígeno en sangre (%)</label>
+                    <input type="number" class="form-control" id="spo2" min="70" max="100">
+                </div>
             </div>
-            <h4 class="mt-4">Información Clínica Adicional</h4>
+
+            <h4 class="mt-4">Información Clínica</h4>
             <div class="row">
-                <div class="col-md-4 mb-3"><label for="nivelDolor" class="form-label">Nivel de Dolor (0-10)</label><input type="number" class="form-control" id="nivelDolor" min="0" max="10"></div>
-                <div class="col-md-8 mb-3"><label for="alergias" class="form-label">Alergias Conocidas (si no tiene, escribir "Ninguna")</label><input type="text" class="form-control" id="alergias"></div>
-                <div class="col-12 mb-3"><label for="medicamentos" class="form-label">Medicamentos Actuales (si no toma, escribir "Ninguno")</label><textarea class="form-control" id="medicamentos" rows="2"></textarea></div>
+                <div class="col-md-4 mb-3">
+                    <label for="nivelDolor" class="form-label">Nivel de Dolor (0-10)</label>
+                    <input type="number" class="form-control" id="nivelDolor" min="0" max="10">
+                </div>
+                <div class="col-md-8 mb-3">
+                    <label for="alergias" class="form-label">Alergias Conocidas</label>
+                    <input type="text" class="form-control" id="alergias" placeholder='Si no tiene, escribir "Ninguna"'>
+                </div>
+                <div class="col-12 mb-3">
+                    <label for="medicamentos" class="form-label">Medicamentos Actuales</label>
+                    <textarea class="form-control" id="medicamentos" rows="2" placeholder='Si no toma, escribir "Ninguno"'></textarea>
+                </div>
             </div>
+
             <h4 class="mt-4">Síntomas</h4>
             <div class="row">
-                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Dolor de cabeza" id="sintoma-cabeza"><label class="form-check-label" for="sintoma-cabeza">Dolor de cabeza</label></div></div>
-                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Dolor muscular" id="sintoma-muscular"><label class="form-check-label" for="sintoma-muscular">Dolor muscular</label></div></div>
-                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Tos" id="sintoma-tos"><label class="form-check-label" for="sintoma-tos">Tos</label></div></div>
-                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Dolor de garganta" id="sintoma-garganta"><label class="form-check-label" for="sintoma-garganta">Dolor de garganta</label></div></div>
-                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Malestar estomacal" id="sintoma-estomacal"><label class="form-check-label" for="sintoma-estomacal">Malestar estomacal</label></div></div>
-                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Náuseas" id="sintoma-nauseas"><label class="form-check-label" for="sintoma-nauseas">Náuseas</label></div></div>
-                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Vómitos" id="sintoma-vomitos"><label class="form-check-label" for="sintoma-vomitos">Vómitos</label></div></div>
-                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Congestión nasal" id="sintoma-congestion"><label class="form-check-label" for="sintoma-congestion">Congestión nasal</label></div></div>
-                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Fatiga" id="sintoma-fatiga"><label class="form-check-label" for="sintoma-fatiga">Fatiga</label></div></div>
-                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Mareos" id="sintoma-mareos"><label class="form-check-label" for="sintoma-mareos">Mareos</label></div></div>
+                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Dolor de cabeza"   id="s-cabeza"><label class="form-check-label" for="s-cabeza">Dolor de cabeza</label></div></div>
+                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Dolor muscular"    id="s-muscular"><label class="form-check-label" for="s-muscular">Dolor muscular</label></div></div>
+                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Tos"               id="s-tos"><label class="form-check-label" for="s-tos">Tos</label></div></div>
+                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Dolor de garganta" id="s-garganta"><label class="form-check-label" for="s-garganta">Dolor de garganta</label></div></div>
+                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Malestar estomacal" id="s-estomacal"><label class="form-check-label" for="s-estomacal">Malestar estomacal</label></div></div>
+                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Náuseas"           id="s-nauseas"><label class="form-check-label" for="s-nauseas">Náuseas</label></div></div>
+                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Vómitos"           id="s-vomitos"><label class="form-check-label" for="s-vomitos">Vómitos</label></div></div>
+                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Congestión nasal"  id="s-congestion"><label class="form-check-label" for="s-congestion">Congestión nasal</label></div></div>
+                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Fatiga"            id="s-fatiga"><label class="form-check-label" for="s-fatiga">Fatiga</label></div></div>
+                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" value="Mareos"            id="s-mareos"><label class="form-check-label" for="s-mareos">Mareos</label></div></div>
             </div>
             <div class="mb-3 mt-3">
-                <label for="otrosSintomas" class="form-label">Otros Síntomas (opcional, separados por coma)</label>
+                <label for="otrosSintomas" class="form-label">Otros Síntomas (separados por coma)</label>
                 <textarea class="form-control" id="otrosSintomas" rows="2"></textarea>
             </div>
-            <h4 class="mt-4">Diagnóstico (Personal Médico)</h4>
-            <div class="mb-3">
-                <label for="diagnostico" class="form-label">Diagnóstico (opcional)</label>
-                <textarea class="form-control" id="diagnostico" rows="3" placeholder="Ingrese el diagnóstico del paciente..."></textarea>
-                <small class="text-muted">Máximo 500 caracteres</small>
+
+            <!-- Diagnóstico: solo visible para médico y admin -->
+            <div id="seccion-diagnostico" class="d-none">
+                <h4 class="mt-4">Diagnóstico <span class="badge bg-info text-dark fs-6">Solo Médico / Admin</span></h4>
+                <div class="mb-3">
+                    <label for="diagnostico" class="form-label">Diagnóstico (opcional)</label>
+                    <textarea class="form-control" id="diagnostico" rows="3"
+                        placeholder="Ingrese el diagnóstico del paciente..."></textarea>
+                    <small class="text-muted">Máximo 500 caracteres</small>
+                </div>
             </div>
-            <button type="submit" class="btn btn-success w-100 mt-4 p-3" id="submit-button">Registrar Paciente</button>
+
+            <button type="submit" class="btn btn-success w-100 mt-4 p-3" id="submit-button">
+                Registrar Paciente
+            </button>
         </form>
     </main>
 
-    <footer class="text-center mt-5 p-3 bg-light">
-        <p>Inacap</p>
-    </footer>
+    <footer class="text-center mt-5 p-3 bg-light"><p>Inacap</p></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- SDK de Supabase — debe ir ANTES de supabase.js -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
     <script src="js/auth.js"></script>
@@ -100,9 +162,20 @@
         document.addEventListener('DOMContentLoaded', () => {
             auth.protectPage();
             auth.displayUserInfo();
+
+            // Mostrar sección diagnóstico solo a médico y admin
+            if (auth.hasAnyRole(['medico', 'admin'])) {
+                document.getElementById('seccion-diagnostico').classList.remove('d-none');
+            }
+
+            // Mostrar enlace admin solo a admin
+            if (auth.hasRole('admin')) {
+                document.getElementById('nav-admin').classList.remove('d-none');
+            }
         });
-        function logoutUser(event) {
-            event.preventDefault();
+
+        function logoutUser(e) {
+            e.preventDefault();
             if (confirm('¿Desea cerrar sesión?')) {
                 auth.logout();
                 window.location.href = 'login.html';
