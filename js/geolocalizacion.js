@@ -1,44 +1,32 @@
 // ============ SISTEMA DE GEOLOCALIZACIÓN Y TIEMPO DE ESPERA ============
 // Este archivo contiene coordenadas de sucursales, comunas y cálculos de distancia
 
-// Coordenadas de sucursales de la Clínica Bienestar
+// Coordenadas de sucursales de la Clínica Bienestar (distribución nacional)
 const sucursales = [
-    {
-        id: 1,
-        nombre: 'Consultorio Centro - Las Condes',
-        latitud: -33.4243,
-        longitud: -70.5647,
-        region: 'Metropolitana'
-    },
-    {
-        id: 2,
-        nombre: 'Consultorio Sur - Puente Alto',
-        latitud: -33.6107,
-        longitud: -70.5688,
-        region: 'Metropolitana'
-    },
-    {
-        id: 3,
-        nombre: 'Consultorio Oriente - Ñuñoa',
-        latitud: -33.4409,
-        longitud: -70.5934,
-        region: 'Metropolitana'
-    },
-    {
-        id: 4,
-        nombre: 'Consultorio Norte - Renca',
-        latitud: -33.4061,
-        longitud: -70.6883,
-        region: 'Metropolitana'
-    },
-    {
-        id: 5,
-        nombre: 'Consultorio Poniente - Maipú',
-        latitud: -33.5095,
-        longitud: -70.7597,
-        region: 'Metropolitana'
-    }
+    { id: 1,  nombre: 'Consultorio Bienestar - Iquique',       latitud: -20.2136, longitud: -70.1533, region: 'Tarapacá' },
+    { id: 2,  nombre: 'Consultorio Bienestar - Antofagasta',   latitud: -23.6345, longitud: -70.4000, region: 'Antofagasta' },
+    { id: 3,  nombre: 'Consultorio Bienestar - Copiapó',       latitud: -27.3668, longitud: -70.3320, region: 'Atacama' },
+    { id: 4,  nombre: 'Consultorio Bienestar - La Serena',     latitud: -29.9037, longitud: -71.5521, region: 'Coquimbo' },
+    { id: 5,  nombre: 'Consultorio Bienestar - Coquimbo',      latitud: -29.9533, longitud: -71.3424, region: 'Coquimbo' },
+    { id: 6,  nombre: 'Consultorio Bienestar - Ovalle',        latitud: -30.5969, longitud: -71.2004, region: 'Coquimbo' },
+    { id: 7,  nombre: 'Consultorio Bienestar - Valparaíso',    latitud: -33.0458, longitud: -71.6197, region: 'Valparaíso' },
+    { id: 8,  nombre: 'Consultorio Bienestar - Viña del Mar',  latitud: -33.0273, longitud: -71.5545, region: 'Valparaíso' },
+    { id: 9,  nombre: 'Consultorio Centro - Las Condes',       latitud: -33.4243, longitud: -70.5647, region: 'Metropolitana' },
+    { id: 10, nombre: 'Consultorio Sur - Puente Alto',         latitud: -33.6107, longitud: -70.5688, region: 'Metropolitana' },
+    { id: 11, nombre: 'Consultorio Oriente - Ñuñoa',           latitud: -33.4409, longitud: -70.5934, region: 'Metropolitana' },
+    { id: 12, nombre: 'Consultorio Norte - Renca',             latitud: -33.4061, longitud: -70.6883, region: 'Metropolitana' },
+    { id: 13, nombre: 'Consultorio Poniente - Maipú',          latitud: -33.5095, longitud: -70.7597, region: 'Metropolitana' },
+    { id: 14, nombre: 'Consultorio Bienestar - Rancagua',      latitud: -34.1708, longitud: -70.7444, region: "O'Higgins" },
+    { id: 15, nombre: 'Consultorio Bienestar - Talca',         latitud: -35.4264, longitud: -71.6669, region: 'Maule' },
+    { id: 16, nombre: 'Consultorio Bienestar - Chillán',       latitud: -36.6067, longitud: -72.1034, region: 'Ñuble' },
+    { id: 17, nombre: 'Consultorio Bienestar - Concepción',    latitud: -36.8201, longitud: -73.0445, region: 'Biobío' },
+    { id: 18, nombre: 'Consultorio Bienestar - Temuco',        latitud: -38.7383, longitud: -72.5898, region: 'Araucanía' },
+    { id: 19, nombre: 'Consultorio Bienestar - Valdivia',      latitud: -39.8142, longitud: -73.2456, region: 'Los Ríos' },
+    { id: 20, nombre: 'Consultorio Bienestar - Puerto Montt',  latitud: -41.3265, longitud: -72.9418, region: 'Los Lagos' },
+    { id: 21, nombre: 'Consultorio Bienestar - Coyhaique',     latitud: -45.5752, longitud: -72.0662, region: 'Aysén' },
+    { id: 22, nombre: 'Consultorio Bienestar - Punta Arenas',  latitud: -53.1638, longitud: -70.9181, region: 'Magallanes' }
 ];
+
 
 // Coordenadas de comunas principales de Chile
 const comunasChile = {
@@ -155,38 +143,29 @@ function calcularDistancia(lat1, lon1, lat2, lon2) {
 
 // Método para calcular tiempo de espera basado en distancia
 function calcularTiempoEspera(distanciaKm) {
-    // Fórmula aproximada: 
-    // - Menos de 5 km: 15-30 minutos
-    // - 5-15 km: 30-60 minutos
-    // - 15-30 km: 60-120 minutos
-    // - Más de 30 km: 120+ minutos
-    
     let tiempoMinimo, tiempoMaximo;
-    
-    if (distanciaKm < 5) {
-        tiempoMinimo = 15;
-        tiempoMaximo = 30;
-    } else if (distanciaKm < 15) {
-        tiempoMinimo = 30;
-        tiempoMaximo = 60;
-    } else if (distanciaKm < 30) {
-        tiempoMinimo = 60;
-        tiempoMaximo = 120;
-    } else if (distanciaKm < 60) {
-        tiempoMinimo = 120;
-        tiempoMaximo = 180;
+
+    if (distanciaKm < 3) {
+        tiempoMinimo = 10; tiempoMaximo = 20;       // Mismo barrio
+    } else if (distanciaKm < 8) {
+        tiempoMinimo = 15; tiempoMaximo = 30;       // Misma ciudad, cerca
+    } else if (distanciaKm < 20) {
+        tiempoMinimo = 30; tiempoMaximo = 60;       // Misma ciudad, lejos
+    } else if (distanciaKm < 50) {
+        tiempoMinimo = 45; tiempoMaximo = 90;       // Ciudad vecina
+    } else if (distanciaKm < 100) {
+        tiempoMinimo = 60; tiempoMaximo = 120;      // Provincia cercana
+    } else if (distanciaKm < 300) {
+        tiempoMinimo = 120; tiempoMaximo = 240;     // Otra región
     } else {
-        tiempoMinimo = 180;
-        tiempoMaximo = 300;
+        tiempoMinimo = 240; tiempoMaximo = 480;     // Muy lejos
     }
-    
-    const promedio = Math.round((tiempoMinimo + tiempoMaximo) / 2);
-    
+
     return {
-        minimo: tiempoMinimo,
-        maximo: tiempoMaximo,
-        promedio: promedio,
-        distancia: Math.round(distanciaKm * 10) / 10 // Redondear a 1 decimal
+        minimo:    tiempoMinimo,
+        maximo:    tiempoMaximo,
+        promedio:  Math.round((tiempoMinimo + tiempoMaximo) / 2),
+        distancia: Math.round(distanciaKm * 10) / 10
     };
 }
 

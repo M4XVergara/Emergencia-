@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clínica Bienestar - Solicitar Hora de Urgencia</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/png" href="images/favicon_clinica.png">
 </head>
@@ -20,15 +21,9 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.html">Inicio</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="solicitar-hora.html">Solicitar Hora</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="login.html">Personal Médico</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="solicitar-hora.html">Solicitar Hora</a></li>
+                    <li class="nav-item"><a class="nav-link" href="login.html">Personal Médico</a></li>
                 </ul>
             </div>
         </div>
@@ -43,85 +38,90 @@
                     </div>
                     <div class="card-body">
                         <p class="text-muted mb-4">
-                            Complete el formulario con sus datos personales para solicitar una hora de urgencia. 
-                            Nos comunicaremos con usted en la brevedad.
+                            Complete el formulario con sus datos personales. Nos comunicaremos a la brevedad para confirmar su hora.
                         </p>
 
                         <form id="solicitarHoraForm" novalidate>
                             <h4 class="mb-3">📋 Datos Personales</h4>
-                            
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label for="nombreSolicitud" class="form-label">Nombre</label>
+                                    <label class="form-label">Nombre</label>
                                     <input type="text" class="form-control" id="nombreSolicitud" required>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="apellidoPaternoSolicitud" class="form-label">Apellido Paterno</label>
+                                    <label class="form-label">Apellido Paterno</label>
                                     <input type="text" class="form-control" id="apellidoPaternoSolicitud" required>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="apellidoMaternoSolicitud" class="form-label">Apellido Materno</label>
+                                    <label class="form-label">Apellido Materno</label>
                                     <input type="text" class="form-control" id="apellidoMaternoSolicitud" required>
                                 </div>
                             </div>
-
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="rutSolicitud" class="form-label">RUN o RUT</label>
-                                    <input type="text" class="form-control" id="rutSolicitud" 
+                                    <label class="form-label">RUN o RUT</label>
+                                    <input type="text" class="form-control" id="rutSolicitud"
                                            placeholder="12.345.678-9" maxlength="12" required>
                                 </div>
                                 <div class="col-md-3 mb-3">
-                                    <label for="edadSolicitud" class="form-label">Edad</label>
+                                    <label class="form-label">Edad</label>
                                     <input type="number" class="form-control" id="edadSolicitud" min="1" max="120" required>
                                 </div>
                                 <div class="col-md-3 mb-3">
-                                    <label for="sexoSolicitud" class="form-label">Sexo</label>
+                                    <label class="form-label">Sexo</label>
                                     <select id="sexoSolicitud" class="form-select" required>
                                         <option value="">Seleccionar...</option>
-                                        <option value="Masculino">Masculino</option>
-                                        <option value="Femenino">Femenino</option>
-                                        <option value="Otro">Otro</option>
+                                        <option>Masculino</option>
+                                        <option>Femenino</option>
+                                        <option>Otro</option>
                                     </select>
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="consultorioSolicitud" class="form-label">🏥 Consultorio más Cercano (por Comuna)</label>
+                                <label class="form-label">🏥 Tu comuna</label>
                                 <select id="consultorioSolicitud" class="form-select" required>
                                     <option value="">Seleccionar comuna...</option>
                                 </select>
-                                <small class="text-muted">Selecciona tu comuna y te mostraremos el consultorio más cercano</small>
+                                <small class="text-muted">Al seleccionar tu comuna verás el consultorio más cercano y el tiempo estimado</small>
                             </div>
 
-                            <div id="infoTiempoEspera" style="display: none;" class="alert alert-info mb-3">
-                                <p class="mb-1"><strong>Consultorio asignado:</strong> <span id="nombreConsultorio"></span></p>
-                                <p class="mb-1"><strong>Distancia:</strong> <span id="distanciaConsultorio"></span></p>
-                                <p class="mb-0"><strong>⏱️ Tiempo de espera aprox:</strong> <span id="tiempoEsperaInfo"></span></p>
+                            <!-- Info dinámica del consultorio -->
+                            <div id="infoTiempoEspera" class="alert mb-3 d-none">
+                                <div class="d-flex align-items-start gap-3">
+                                    <i class="bi bi-hospital fs-4 text-primary"></i>
+                                    <div class="flex-grow-1">
+                                        <p class="mb-1"><strong>Consultorio asignado:</strong> <span id="nombreConsultorio"></span></p>
+                                        <p class="mb-1"><strong>Distancia aproximada:</strong> <span id="distanciaConsultorio"></span></p>
+                                        <p class="mb-0"><strong>⏱️ Tiempo de espera:</strong>
+                                            <span id="tiempoEsperaInfo" class="fw-bold text-primary"></span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- Aviso si la distancia es grande -->
+                                <div id="aviso-distancia" class="alert alert-warning mt-2 mb-0 py-2 d-none">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    El consultorio más cercano está a más de 100 km. Te recomendamos llamar al número de emergencias.
+                                </div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="telefonoSolicitud" class="form-label">📱 Teléfono de Contacto</label>
-                                <input type="tel" class="form-control" id="telefonoSolicitud" 
-                                       placeholder="+56912345678" required>
+                                <label class="form-label">📱 Teléfono de Contacto</label>
+                                <input type="tel" class="form-control" id="telefonoSolicitud" placeholder="+56912345678" required>
                             </div>
-
                             <div class="mb-3">
-                                <label for="emailSolicitud" class="form-label">📧 Correo Electrónico</label>
-                                <input type="email" class="form-control" id="emailSolicitud" 
-                                       placeholder="correo@ejemplo.com" required>
+                                <label class="form-label">📧 Correo Electrónico</label>
+                                <input type="email" class="form-control" id="emailSolicitud" placeholder="correo@ejemplo.com" required>
                             </div>
-
                             <div class="mb-3">
-                                <label for="motivoConsulta" class="form-label">¿Cuál es el motivo de su consulta?</label>
-                                <textarea class="form-control" id="motivoConsulta" rows="3" 
-                                         placeholder="Describa brevemente sus síntomas o motivo de la urgencia..." required></textarea>
+                                <label class="form-label">¿Cuál es el motivo de su consulta?</label>
+                                <textarea class="form-control" id="motivoConsulta" rows="3"
+                                    placeholder="Describa brevemente sus síntomas o motivo de la urgencia..." required></textarea>
                             </div>
-
                             <div class="form-check mb-4">
                                 <input class="form-check-input" type="checkbox" id="terminosAceptacion" required>
                                 <label class="form-check-label" for="terminosAceptacion">
-                                    Acepto que la clínica se comunique conmigo por teléfono o correo para confirmar mi hora de urgencia
+                                    Acepto que la clínica se comunique conmigo por teléfono o correo para confirmar mi hora
                                 </label>
                             </div>
 
@@ -130,11 +130,7 @@
                             </button>
                         </form>
 
-                        <div id="mensaje-exito" class="alert alert-success mt-3" style="display: none;">
-                            <h4>✓ Solicitud Registrada</h4>
-                            <p>Su solicitud de hora ha sido recibida correctamente. Nos comunicaremos con usted en la brevedad para confirmar su hora de urgencia.</p>
-                            <a href="index.html" class="btn btn-sm btn-primary">Volver al Inicio</a>
-                        </div>
+                        <div id="mensaje-exito" class="d-none mt-3"></div>
                     </div>
                 </div>
 
@@ -166,117 +162,150 @@
     </main>
 
     <footer class="text-center mt-5 p-3 bg-light">
-        <p>Desarrollado por [Javier Peña//Tomás Araya] - Programación Front End - Docente: MariaVictoria Freites</p>
+        <p>Inacap</p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Supabase SDK debe ir ANTES de supabase.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
     <script src="js/geolocalizacion.js"></script>
     <script>
-        // Cargar comunas al inicializar la página
         document.addEventListener('DOMContentLoaded', () => {
+
+            // ── Cargar comunas en el select ───────────────────────────
             const selectComuna = document.getElementById('consultorioSolicitud');
-            const comunas = obtenerComunasOrdenadas();
-            
-            comunas.forEach(comuna => {
-                const option = document.createElement('option');
-                option.value = comuna;
-                option.textContent = comuna;
-                selectComuna.appendChild(option);
+            obtenerComunasOrdenadas().forEach(comuna => {
+                const opt = document.createElement('option');
+                opt.value = opt.textContent = comuna;
+                selectComuna.appendChild(opt);
             });
 
-            // Escuchar cambios en el select
+            // ── Mostrar info al cambiar la comuna ─────────────────────
             selectComuna.addEventListener('change', (e) => {
-                const comunaSeleccionada = e.target.value;
-                
-                if (comunaSeleccionada) {
-                    const infoSucursal = encontrarSucursalMasCercana(comunaSeleccionada);
-                    
-                    if (infoSucursal) {
-                        // Mostrar información
-                        document.getElementById('nombreConsultorio').textContent = infoSucursal.sucursal.nombre;
-                        document.getElementById('distanciaConsultorio').textContent = infoSucursal.distancia;
-                        document.getElementById('tiempoEsperaInfo').textContent = 
-                            `${infoSucursal.tiempoPromedio} minutos (${infoSucursal.tiempoMinimo}-${infoSucursal.tiempoMaximo} min)`;
-                        
-                        document.getElementById('infoTiempoEspera').style.display = 'block';
-                    }
+                const info = encontrarSucursalMasCercana(e.target.value);
+                const infoEl = document.getElementById('infoTiempoEspera');
+                const avisoEl = document.getElementById('aviso-distancia');
+
+                if (!e.target.value || !info) {
+                    infoEl.classList.add('d-none');
+                    return;
+                }
+
+                const distKm = parseFloat(info.distancia);
+
+                // Cambiar color del alert según distancia
+                infoEl.className = 'alert mb-3';
+                infoEl.classList.add(distKm > 100 ? 'alert-warning' : 'alert-info');
+
+                document.getElementById('nombreConsultorio').textContent    = info.sucursal.nombre;
+                document.getElementById('distanciaConsultorio').textContent = info.distancia + ' km';
+                document.getElementById('tiempoEsperaInfo').textContent     =
+                    `${info.tiempoPromedio} min (entre ${info.tiempoMinimo} y ${info.tiempoMaximo} min)`;
+
+                // Aviso extra si está muy lejos
+                avisoEl.classList.toggle('d-none', distKm <= 100);
+                infoEl.classList.remove('d-none');
+            });
+
+            // ── Formateo RUT en tiempo real ───────────────────────────
+            document.getElementById('rutSolicitud').addEventListener('input', (e) => {
+                let rut  = e.target.value.replace(/[^0-9kK]/g, '').slice(0, 10);
+                let body = rut.slice(0, -1);
+                let dv   = rut.slice(-1);
+                if (rut.length > 1) {
+                    body = body.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+                    e.target.value = `${body}-${dv}`;
                 } else {
-                    document.getElementById('infoTiempoEspera').style.display = 'none';
+                    e.target.value = rut;
                 }
             });
-        });
 
-        document.getElementById('solicitarHoraForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+            // ── ENVÍO DEL FORMULARIO → guarda en Supabase ────────────
+            document.getElementById('solicitarHoraForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
 
-            const comunaSeleccionada = document.getElementById('consultorioSolicitud').value;
-            const infoSucursal = encontrarSucursalMasCercana(comunaSeleccionada);
+                const btn             = document.getElementById('btnSolicitarHora');
+                const comunaSelec     = document.getElementById('consultorioSolicitud').value;
+                const infoSucursal    = encontrarSucursalMasCercana(comunaSelec);
+                const terminosOk      = document.getElementById('terminosAceptacion').checked;
 
-            // Obtener datos del formulario
-            const solicitud = {
-                nombre: document.getElementById('nombreSolicitud').value,
-                apellidoPaterno: document.getElementById('apellidoPaternoSolicitud').value,
-                apellidoMaterno: document.getElementById('apellidoMaternoSolicitud').value,
-                rut: document.getElementById('rutSolicitud').value,
-                edad: document.getElementById('edadSolicitud').value,
-                sexo: document.getElementById('sexoSolicitud').value,
-                comuna: comunaSeleccionada,
-                consultorio: infoSucursal ? infoSucursal.sucursal.nombre : 'No disponible',
-                distancia: infoSucursal ? infoSucursal.distancia : 'N/A',
-                tiempoEsperaMin: infoSucursal ? infoSucursal.tiempoMinimo : 0,
-                tiempoEsperaMax: infoSucursal ? infoSucursal.tiempoMaximo : 0,
-                tiempoEsperaPromedio: infoSucursal ? infoSucursal.tiempoPromedio : 0,
-                telefono: document.getElementById('telefonoSolicitud').value,
-                email: document.getElementById('emailSolicitud').value,
-                motivo: document.getElementById('motivoConsulta').value,
-                fechaSolicitud: new Date().toLocaleString('es-CL'),
-                id: Date.now()
-            };
+                if (!terminosOk) {
+                    alert('Debes aceptar los términos para continuar.');
+                    return;
+                }
 
-            // Guardar en localStorage
-            const solicitudes = JSON.parse(localStorage.getItem('solicitudesUrgencia')) || [];
-            solicitudes.push(solicitud);
-            localStorage.setItem('solicitudesUrgencia', JSON.stringify(solicitudes));
+                btn.disabled    = true;
+                btn.textContent = 'Enviando...';
 
-            // Mostrar mensaje de éxito con información de tiempo de espera
-            document.getElementById('solicitarHoraForm').style.display = 'none';
-            
-            const mensajeExito = document.getElementById('mensaje-exito');
-            if (infoSucursal) {
-                mensajeExito.innerHTML = `
-                    <h4>✓ Solicitud Registrada</h4>
-                    <p>Su solicitud de hora ha sido recibida correctamente.</p>
-                    <hr>
-                    <div class="alert alert-info mb-3">
-                        <h5>🏥 Consultorio Asignado:</h5>
-                        <p class="mb-1"><strong>${infoSucursal.sucursal.nombre}</strong></p>
-                        <p class="mb-1"><strong>Comuna:</strong> ${comunaSeleccionada}</p>
-                        <p class="mb-1"><strong>Distancia aproximada:</strong> ${infoSucursal.distancia}</p>
-                        <hr>
-                        <h5>⏱️ Tiempo de Espera Aproximado:</h5>
-                        <p class="mb-0"><strong style="font-size: 1.2em; color: #0d6efd;">${infoSucursal.tiempoPromedio} minutos</strong></p>
-                        <p class="text-muted mb-0">(Rango: ${infoSucursal.tiempoMinimo}-${infoSucursal.tiempoMaximo} minutos)</p>
-                    </div>
-                    <p class="text-muted mb-3">Nos comunicaremos con usted en la brevedad para confirmar su hora de urgencia.</p>
-                    <a href="index.html" class="btn btn-sm btn-primary">Volver al Inicio</a>
-                `;
-            } else {
-                mensajeExito.innerHTML = `
-                    <h4>✓ Solicitud Registrada</h4>
-                    <p>Su solicitud de hora ha sido recibida correctamente. Nos comunicaremos con usted en la brevedad para confirmar su hora de urgencia.</p>
-                    <a href="index.html" class="btn btn-sm btn-primary">Volver al Inicio</a>
-                `;
-            }
-            
-            mensajeExito.style.display = 'block';
-            mensajeExito.scrollIntoView({ behavior: 'smooth' });
-        });
+                const solicitud = {
+                    solicitud_id:          Date.now(),
+                    nombre:                document.getElementById('nombreSolicitud').value.trim(),
+                    apellido_paterno:      document.getElementById('apellidoPaternoSolicitud').value.trim(),
+                    apellido_materno:      document.getElementById('apellidoMaternoSolicitud').value.trim(),
+                    rut:                   document.getElementById('rutSolicitud').value.trim(),
+                    edad:                  parseInt(document.getElementById('edadSolicitud').value) || null,
+                    sexo:                  document.getElementById('sexoSolicitud').value,
+                    comuna:                comunaSelec,
+                    consultorio:           infoSucursal ? infoSucursal.sucursal.nombre : 'Por asignar',
+                    distancia_km:          infoSucursal ? String(infoSucursal.distancia) : null,
+                    tiempo_espera_min:     infoSucursal ? infoSucursal.tiempoMinimo    : null,
+                    tiempo_espera_max:     infoSucursal ? infoSucursal.tiempoMaximo    : null,
+                    tiempo_espera_promedio: infoSucursal ? infoSucursal.tiempoPromedio : null,
+                    telefono:              document.getElementById('telefonoSolicitud').value.trim(),
+                    email:                 document.getElementById('emailSolicitud').value.trim(),
+                    motivo:                document.getElementById('motivoConsulta').value.trim(),
+                    estado:                'pendiente'
+                };
 
-        // Limpiar error en tiempo real
-        const campos = document.querySelectorAll('input, textarea, select');
-        campos.forEach(campo => {
-            campo.addEventListener('input', () => {
-                campo.classList.remove('is-invalid');
+                // Guardar en Supabase
+                const { error } = await _supabase
+                    .from('solicitudes_hora')
+                    .insert([solicitud]);
+
+                btn.disabled    = false;
+                btn.textContent = '✓ Solicitar Hora de Urgencia';
+
+                document.getElementById('solicitarHoraForm').classList.add('d-none');
+                const msgEl = document.getElementById('mensaje-exito');
+                msgEl.classList.remove('d-none');
+
+                if (!error && infoSucursal) {
+                    msgEl.innerHTML = `
+                        <div class="alert alert-success">
+                            <h4>✓ Solicitud Registrada</h4>
+                            <p>Su solicitud ha sido recibida correctamente.</p>
+                            <hr>
+                            <p class="mb-1"><strong>Consultorio:</strong> ${infoSucursal.sucursal.nombre}</p>
+                            <p class="mb-1"><strong>Distancia:</strong> ${infoSucursal.distancia} km</p>
+                            <p class="mb-0"><strong>⏱️ Tiempo de espera estimado:</strong>
+                                <span class="fw-bold text-primary fs-5">${infoSucursal.tiempoPromedio} minutos</span>
+                                <span class="text-muted">(${infoSucursal.tiempoMinimo}–${infoSucursal.tiempoMaximo} min)</span>
+                            </p>
+                            <hr>
+                            <p class="text-muted mb-2">Nos comunicaremos para confirmar su hora. Puedes ver el estado de tu solicitud con tu RUT en:</p>
+                            <a href="portal-paciente.html" class="btn btn-sm btn-outline-primary me-2">👤 Ver mis atenciones</a>
+                            <a href="index.html" class="btn btn-sm btn-primary">Volver al Inicio</a>
+                        </div>`;
+                } else if (!error) {
+                    msgEl.innerHTML = `
+                        <div class="alert alert-success">
+                            <h4>✓ Solicitud Registrada</h4>
+                            <p>Su solicitud fue recibida. Nos comunicaremos a la brevedad.</p>
+                            <a href="portal-paciente.html" class="btn btn-sm btn-outline-primary me-2">👤 Ver mis atenciones</a>
+                            <a href="index.html" class="btn btn-sm btn-primary">Volver al Inicio</a>
+                        </div>`;
+                } else {
+                    console.error('Error Supabase:', error);
+                    msgEl.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h4>⚠️ Error al enviar</h4>
+                            <p>Hubo un problema al registrar tu solicitud. Por favor intenta nuevamente o llama al +56 2 1234 5678.</p>
+                            <button class="btn btn-sm btn-danger" onclick="location.reload()">Intentar de nuevo</button>
+                        </div>`;
+                }
+
+                msgEl.scrollIntoView({ behavior: 'smooth' });
             });
         });
     </script>
