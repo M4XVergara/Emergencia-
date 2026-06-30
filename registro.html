@@ -131,16 +131,7 @@
                 <textarea class="form-control" id="otrosSintomas" rows="2"></textarea>
             </div>
 
-            <!-- Diagnóstico: solo visible para médico y admin -->
-            <div id="seccion-diagnostico" class="d-none">
-                <h4 class="mt-4">Diagnóstico <span class="badge bg-info text-dark fs-6">Solo Médico / Admin</span></h4>
-                <div class="mb-3">
-                    <label for="diagnostico" class="form-label">Diagnóstico (opcional)</label>
-                    <textarea class="form-control" id="diagnostico" rows="3"
-                        placeholder="Ingrese el diagnóstico del paciente..."></textarea>
-                    <small class="text-muted">Máximo 500 caracteres</small>
-                </div>
-            </div>
+            <!-- El diagnóstico ahora se registra exclusivamente en atencion.html -->
 
             <button type="submit" class="btn btn-success w-100 mt-4 p-3" id="submit-button">
                 Registrar Paciente
@@ -162,11 +153,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             auth.protectPage();
             auth.displayUserInfo();
-
-            // Mostrar sección diagnóstico solo a médico y admin
-            if (auth.hasAnyRole(['medico', 'admin'])) {
-                document.getElementById('seccion-diagnostico').classList.remove('d-none');
-            }
 
             // Mostrar enlace admin solo a admin
             if (auth.hasRole('admin')) {

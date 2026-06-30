@@ -1,135 +1,151 @@
-// main.js — versión Supabase
-// Reemplaza localStorage por llamadas async a la BD en la nube
+// Este evento se dispara cuando todo el documento HTML ha sido cargado y analizado por el navegador.
+// Ponemos todo nuestro código dentro de este evento para asegurarnos de que los elementos HTML (como botones y formularios) ya existen antes de intentar manipularlos.
+document.addEventListener('DOMContentLoaded', () => {
 
-document.addEventListener('DOMContentLoaded', async () => {
+    // --- CONFIGURACIÓN INICIAL ---
 
-    const ui        = new UI();
+    // Creamos una 'instancia' de nuestra clase UI. Esto es como crear un objeto 'ui' que tiene acceso a todos los métodos que definimos en ui.js (como displayPatients, showMessage, etc.).
+    const ui = new UI();
+    // Hacemos lo mismo con nuestra clase Validator.
     const validator = new Validator();
 
-    // ── PÁGINA DE REGISTRO ────────────────────────────────────────
-    if (document.getElementById('registroForm')) {
-        const form         = document.getElementById('registroForm');
-        const formTitle    = document.getElementById('form-title');
-        const submitButton = document.getElementById('submit-button');
+    // --- FUNCIONES AUXILIARES (HELPERS) ---
 
-        // Validación visual en tiempo real (sin cambios)
+    // Función para obtener la lista de pacientes desde el almacenamiento local del navegador.
+    // JSON.parse() convierte el texto guardado en localStorage de nuevo a un arreglo de objetos JavaScript.
+    // Si no hay nada guardado ('null'), devuelve un arreglo vacío [].
+    const getPatients = () => JSON.parse(localStorage.getItem('pacientes')) || [];
+
+    // Función para guardar la lista de pacientes en el almacenamiento local.
+    // JSON.stringify() convierte nuestro arreglo de objetos JavaScript a un string de texto, que es como localStorage lo puede guardar.
+    const savePatients = (patients) => localStorage.setItem('pacientes', JSON.stringify(patients));
+
+
+    // --- LÓGICA ESPECÍFICA PARA LA PÁGINA DE REGISTRO ---
+
+    // Este 'if' revisa si en la página actual existe un elemento con el ID 'registroForm'.
+    // Esto nos permite tener un solo archivo main.js que ejecuta código diferente dependiendo de si estamos en registro.html o pacientes.html.
+    if (document.getElementById('registroForm')) {
+        // Obtenemos referencias a los elementos del formulario que vamos a manipular.
+        const form = document.getElementById('registroForm');
+
+        // --- INICIO: NUEVA LÓGICA PARA ERRORES VISUALES ---
+        // Se crea un arreglo con los IDs de todos los campos que se van a validar.
         const camposValidables = [
             'nombre', 'apellidoPaterno', 'apellidoMaterno', 'rut', 'edad',
             'sexo', 'temperatura', 'presionSistolica', 'presionDiastolica',
             'pulsaciones', 'spo2', 'nivelDolor', 'alergias', 'medicamentos'
         ];
+
+        // Se recorre cada ID del arreglo para añadirle un 'listener'.
         camposValidables.forEach(id => {
             const campo = document.getElementById(id);
-            if (!campo) return;
-            const evento = campo.tagName === 'SELECT' ? 'change' : 'input';
-            campo.addEventListener(evento, () => {
-                if (campo.value.trim() !== '') campo.classList.remove('input-error');
-            });
-        });
-
-        // Modo edición
-        const patientIdToEdit = sessionStorage.getItem('patientIdToEdit');
-        if (patientIdToEdit) {
-            formTitle.textContent     = 'Editar Información del Paciente';
-            submitButton.textContent  = 'Guardar Cambios';
-            submitButton.classList.replace('btn-success', 'btn-primary');
-
-            // Cargar datos del paciente desde Supabase
-            submitButton.disabled    = true;
-            submitButton.textContent = 'Cargando...';
-            const pacientes = await db.getPacientes();
-            const patient   = pacientes.find(p => p.id == patientIdToEdit);
-
-            if (patient) {
-                document.getElementById('nombre').value            = patient.nombre;
-                document.getElementById('apellidoPaterno').value   = patient.apellidoPaterno;
-                document.getElementById('apellidoMaterno').value   = patient.apellidoMaterno;
-                document.getElementById('rut').value               = patient.rut;
-                document.getElementById('edad').value              = patient.edad;
-                document.getElementById('sexo').value              = patient.sexo;
-                document.getElementById('temperatura').value       = patient.signosVitales.temperatura;
-                document.getElementById('presionSistolica').value  = patient.signosVitales.presion.sistolica;
-                document.getElementById('presionDiastolica').value = patient.signosVitales.presion.diastolica;
-                document.getElementById('pulsaciones').value       = patient.signosVitales.pulsaciones;
-                document.getElementById('spo2').value              = patient.signosVitales.spo2;
-                document.getElementById('nivelDolor').value        = patient.informacionClinica.nivelDolor;
-                document.getElementById('alergias').value          = patient.informacionClinica.alergias;
-                document.getElementById('medicamentos').value      = patient.informacionClinica.medicamentos;
-                document.getElementById('diagnostico').value       = patient.diagnostico || '';
-
-                patient.sintomas.forEach(sintoma => {
-                    const cb = document.querySelector(`input[type="checkbox"][value="${sintoma}"]`);
-                    if (cb) cb.checked = true;
+            if (campo) {
+                // Se determina si el campo es un 'select' o un 'input' para usar el evento correcto ('change' o 'input').
+                const evento = campo.tagName === 'SELECT' ? 'change' : 'input';
+                // Se añade un listener que se activa cuando el usuario escribe o cambia el valor.
+                campo.addEventListener(evento, () => {
+                    // Si el campo ya no está vacío, se le quita la clase de error. Esto mejora la experiencia del usuario.
+                    if (campo.value.trim() !== '') {
+                        campo.classList.remove('input-error');
+                    }
                 });
             }
-            submitButton.disabled    = false;
+        });
+        // --- FIN: NUEVA LÓGICA PARA ERRORES VISUALES ---
+
+        const formTitle = document.getElementById('form-title');
+        const submitButton = document.getElementById('submit-button');
+
+        // --- LÓGICA DE "MODO EDICIÓN" ---
+        // Al cargar la página de registro, revisamos si se guardó un ID en sessionStorage.
+        // sessionStorage es como localStorage, pero se borra cuando se cierra la pestaña del navegador. Es perfecto para pasar información temporal entre páginas.
+        const patientIdToEdit = sessionStorage.getItem('patientIdToEdit');
+        console.log(patientIdToEdit); // Una línea de depuración para ver el ID en la consola.
+
+        // Si se encontró un ID, significa que venimos de presionar un botón "Editar".
+        if (patientIdToEdit) {
+            // Se cambia la UI para que refleje el modo edición.
+            formTitle.textContent = 'Editar Información del Paciente';
             submitButton.textContent = 'Guardar Cambios';
+            submitButton.classList.remove('btn-success'); // Quitamos el color verde.
+            submitButton.classList.add('btn-primary');    // Añadimos el color azul.
+
+            // Se busca al paciente específico en nuestro arreglo de pacientes.
+            const patients = getPatients();
+            const patient = patients.find(p => p.id == patientIdToEdit);
+
+            // Si se encontró al paciente, se rellenan todos los campos del formulario con sus datos.
+            if (patient) {
+                document.getElementById('nombre').value = patient.nombre;
+                document.getElementById('apellidoPaterno').value = patient.apellidoPaterno;
+                document.getElementById('apellidoMaterno').value = patient.apellidoMaterno;
+                document.getElementById('rut').value = patient.rut;
+                document.getElementById('edad').value = patient.edad;
+                document.getElementById('sexo').value = patient.sexo;
+                document.getElementById('temperatura').value = patient.signosVitales.temperatura;
+                document.getElementById('presionSistolica').value = patient.signosVitales.presion.sistolica;
+                document.getElementById('presionDiastolica').value = patient.signosVitales.presion.diastolica;
+                document.getElementById('pulsaciones').value = patient.signosVitales.pulsaciones;
+                document.getElementById('spo2').value = patient.signosVitales.spo2;
+                document.getElementById('nivelDolor').value = patient.informacionClinica.nivelDolor;
+                document.getElementById('alergias').value = patient.informacionClinica.alergias;
+                document.getElementById('medicamentos').value = patient.informacionClinica.medicamentos;
+                // Nota: el diagnóstico ya no se edita aquí, ahora vive en atencion.html
+
+                // Se marcan los checkboxes correspondientes a los síntomas del paciente.
+                patient.sintomas.forEach(sintoma => {
+                    const checkbox = document.querySelector(`input[type="checkbox"][value="${sintoma}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
         }
 
-        // Formateo en tiempo real (sin cambios)
-        const onlyLettersHandler = (e) => {
-            e.target.value = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
-        };
+        // --- LISTENERS DE FORMATO Y VALIDACIÓN EN TIEMPO REAL ---
+        // (Esta sección no ha cambiado y sigue aplicando formatos mientras el usuario escribe)
+        const onlyLettersHandler = (event) => { event.target.value = event.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, ''); };
         document.getElementById('nombre').addEventListener('input', onlyLettersHandler);
         document.getElementById('apellidoPaterno').addEventListener('input', onlyLettersHandler);
         document.getElementById('apellidoMaterno').addEventListener('input', onlyLettersHandler);
-
         const rutInput = document.getElementById('rut');
-        rutInput.addEventListener('input', (e) => {
-            let rut  = e.target.value.replace(/[^0-9kK]/g, '').slice(0, 10);
-            let body = rut.slice(0, -1);
-            let dv   = rut.slice(-1);
-            if (rut.length > 1) {
-                body = body.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
-                e.target.value = `${body}-${dv}`;
-            } else {
-                e.target.value = rut;
-            }
-        });
-
+        rutInput.addEventListener('input', (event) => { let rut = event.target.value.replace(/[^0-9kK]/g, ''); rut = rut.slice(0, 10); let body = rut.slice(0, -1); let dv = rut.slice(-1); if (rut.length > 1) { body = body.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.'); event.target.value = `${body}-${dv}`; } else { event.target.value = rut; } });
         const vitalSignsInputs = ['temperatura', 'presionSistolica', 'presionDiastolica', 'pulsaciones', 'spo2', 'nivelDolor'];
-        vitalSignsInputs.forEach(id => {
-            const input = document.getElementById(id);
-            if (!input) return;
-            input.addEventListener('blur', (e) => {
-                const min = parseFloat(e.target.min);
-                const max = parseFloat(e.target.max);
-                let   val = parseFloat(e.target.value);
-                if (!isNaN(val)) e.target.value = Math.min(max, Math.max(min, val));
-            });
-        });
+        vitalSignsInputs.forEach(id => { const input = document.getElementById(id); if (input) { input.addEventListener('blur', (event) => { const field = event.target; const min = parseFloat(field.min); const max = parseFloat(field.max); let value = parseFloat(field.value); if (!isNaN(value)) { if (value < min) field.value = min; else if (value > max) field.value = max; } }); } });
+        const numberInputsToSanitize = ['edad', 'temperatura', 'presionSistolica', 'presionDiastolica', 'pulsaciones', 'spo2', 'nivelDolor'];
+        const blockInvalidKeysHandler = (event) => { if (['e', 'E', '+', '-'].includes(event.key)) { event.preventDefault(); } };
+        numberInputsToSanitize.forEach(id => { const input = document.getElementById(id); if (input) { input.addEventListener('keydown', blockInvalidKeysHandler); } });
 
-        const blockInvalidKeys = (e) => {
-            if (['e','E','+','-'].includes(e.key)) e.preventDefault();
-        };
-        ['edad','temperatura','presionSistolica','presionDiastolica','pulsaciones','spo2','nivelDolor']
-            .forEach(id => document.getElementById(id)?.addEventListener('keydown', blockInvalidKeys));
-
-        // ── ENVÍO DEL FORMULARIO ──────────────────────────────────
-        form.addEventListener('submit', async (event) => {
+        // --- LISTENER PRINCIPAL DEL FORMULARIO (AL ENVIAR) ---
+        form.addEventListener('submit', (event) => {
             event.preventDefault();
 
+            // 1. Se recolectan todos los datos del formulario.
             const formData = {
-                nombre:            document.getElementById('nombre').value,
-                apellidoPaterno:   document.getElementById('apellidoPaterno').value,
-                apellidoMaterno:   document.getElementById('apellidoMaterno').value,
-                rut:               document.getElementById('rut').value,
-                edad:              document.getElementById('edad').value,
-                sexo:              document.getElementById('sexo').value,
-                temperatura:       document.getElementById('temperatura').value,
-                presionSistolica:  document.getElementById('presionSistolica').value,
+                nombre: document.getElementById('nombre').value,
+                apellidoPaterno: document.getElementById('apellidoPaterno').value,
+                apellidoMaterno: document.getElementById('apellidoMaterno').value,
+                rut: document.getElementById('rut').value,
+                edad: document.getElementById('edad').value,
+                sexo: document.getElementById('sexo').value,
+                temperatura: document.getElementById('temperatura').value,
+                presionSistolica: document.getElementById('presionSistolica').value,
                 presionDiastolica: document.getElementById('presionDiastolica').value,
-                pulsaciones:       document.getElementById('pulsaciones').value,
-                spo2:              document.getElementById('spo2').value,
-                nivelDolor:        document.getElementById('nivelDolor').value,
-                alergias:          document.getElementById('alergias').value,
-                medicamentos:      document.getElementById('medicamentos').value,
-                diagnostico:       document.getElementById('diagnostico').value
+                pulsaciones: document.getElementById('pulsaciones').value,
+                spo2: document.getElementById('spo2').value,
+                nivelDolor: document.getElementById('nivelDolor').value,
+                alergias: document.getElementById('alergias').value,
+                medicamentos: document.getElementById('medicamentos').value,
+                diagnostico: '' // El diagnóstico se asigna posteriormente en atencion.html
             };
 
+            // 2. Se pasan los datos al validador.
             const validationResult = validator.validateForm(formData);
             if (!validationResult.isValid) {
+                // --- INICIO: NUEVA LÓGICA DE VISUALIZACIÓN DE ERRORES ---
+                // Se limpian los errores visuales de la vez anterior.
                 document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+
+                // Este 'mapa' ayuda a conectar el texto del error (ej: 'Nombre') con el ID real del campo (ej: 'nombre').
                 const fieldMap = {
                     'Nombre': 'nombre', 'Apellido Paterno': 'apellidoPaterno', 'Apellido Materno': 'apellidoMaterno',
                     'RUT': 'rut', 'Edad': 'edad', 'Sexo': 'sexo', 'Temperatura': 'temperatura',
@@ -137,55 +153,67 @@ document.addEventListener('DOMContentLoaded', async () => {
                     'Pulsaciones': 'pulsaciones', 'Nivel de Oxígeno': 'spo2', 'Nivel de Dolor': 'nivelDolor',
                     'Alergias Conocidas': 'alergias', 'Medicamentos Actuales': 'medicamentos'
                 };
+
+                // Se recorre cada mensaje de error que generó el validador.
                 validationResult.errors.forEach(error => {
-                    const match = error.match(/'(.+?)'/);
+                    const match = error.match(/'(.+?)'/); // Se extrae el nombre del campo del mensaje de error (ej: 'Nombre').
                     if (match) {
-                        const id = fieldMap[match[1]];
-                        if (id) document.getElementById(id)?.classList.add('input-error');
+                        const label = match[1];
+                        const id = fieldMap[label]; // Se busca el ID correspondiente en el mapa.
+                        if (id) {
+                            const field = document.getElementById(id); // Se obtiene el elemento del campo.
+                            if (field) {
+                                field.classList.add('input-error'); // Se le añade la clase para el borde rojo.
+                            }
+                        }
                     }
                 });
+
+                // Se muestran todos los errores en una ventana emergente del navegador.
                 alert(validationResult.errors.join('\n'));
-                return;
+                return; // Se detiene la ejecución para no registrar al paciente.
+                 // --- FIN: NUEVA LÓGICA DE VISUALIZACIÓN DE ERRORES ---
             }
 
-            // Recolectar síntomas
+            // 3. Se recolectan los síntomas.
             const sintomas = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
-            const otros    = document.getElementById('otrosSintomas').value.trim();
-            if (otros) sintomas.push(...otros.split(',').map(s => s.trim()).filter(Boolean));
+            const otrosSintomas = document.getElementById('otrosSintomas').value.trim();
+            if (otrosSintomas) {
+                sintomas.push(...otrosSintomas.split(',').map(s => s.trim()).filter(s => s));
+            }
 
-            // Deshabilitar botón mientras guarda
-            submitButton.disabled    = true;
-            submitButton.textContent = 'Guardando...';
-
+            // --- LÓGICA PARA DECIDIR SI CREAR O ACTUALIZAR ---
+            let patients = getPatients();
             if (patientIdToEdit) {
-                // MODO ACTUALIZAR
-                const pacientes = await db.getPacientes();
-                const existente = pacientes.find(p => p.id == patientIdToEdit);
-                if (existente) {
-                    existente.nombre           = formData.nombre;
-                    existente.apellidoPaterno  = formData.apellidoPaterno;
-                    existente.apellidoMaterno  = formData.apellidoMaterno;
-                    existente.rut              = formData.rut;
-                    existente.edad             = parseInt(formData.edad);
-                    existente.sexo             = formData.sexo;
-                    existente.signosVitales.temperatura             = parseFloat(formData.temperatura);
-                    existente.signosVitales.presion.sistolica       = parseInt(formData.presionSistolica);
-                    existente.signosVitales.presion.diastolica      = parseInt(formData.presionDiastolica);
-                    existente.signosVitales.pulsaciones             = parseInt(formData.pulsaciones);
-                    existente.signosVitales.spo2                   = parseInt(formData.spo2);
-                    existente.informacionClinica.nivelDolor         = parseInt(formData.nivelDolor);
-                    existente.informacionClinica.alergias           = formData.alergias;
-                    existente.informacionClinica.medicamentos       = formData.medicamentos;
-                    existente.diagnostico  = formData.diagnostico;
-                    existente.sintomas     = sintomas;
-                    existente.detectarSintomasAutomaticos?.();
-                    existente.urgencia     = clasificarUrgencia(existente.sintomas);
-                    await db.updatePaciente(existente);
+                // MODO ACTUALIZAR:
+                const patientIndex = patients.findIndex(p => p.id == patientIdToEdit);
+                if (patientIndex > -1) {
+                    const patientToUpdate = patients[patientIndex];
+                    // Se actualizan todas las propiedades del paciente existente.
+                    patientToUpdate.nombre = formData.nombre;
+                    patientToUpdate.apellidoPaterno = formData.apellidoPaterno;
+                    patientToUpdate.apellidoMaterno = formData.apellidoMaterno;
+                    patientToUpdate.rut = formData.rut;
+                    patientToUpdate.edad = parseInt(formData.edad);
+                    patientToUpdate.sexo = formData.sexo;
+                    patientToUpdate.signosVitales.temperatura = parseFloat(formData.temperatura);
+                    patientToUpdate.signosVitales.presion.sistolica = parseInt(formData.presionSistolica);
+                    patientToUpdate.signosVitales.presion.diastolica = parseInt(formData.presionDiastolica);
+                    patientToUpdate.signosVitales.pulsaciones = parseInt(formData.pulsaciones);
+                    patientToUpdate.signosVitales.spo2 = parseInt(formData.spo2);
+                    patientToUpdate.informacionClinica.nivelDolor = parseInt(formData.nivelDolor);
+                    patientToUpdate.informacionClinica.alergias = formData.alergias;
+                    patientToUpdate.informacionClinica.medicamentos = formData.medicamentos;
+                    // No se modifica el diagnóstico aquí: se preserva el que ya tenía
+                    // (su edición ocurre exclusivamente en atencion.html)
+                    patientToUpdate.sintomas = sintomas;
+                    patientToUpdate.detectarSintomasAutomaticos();
+                    patientToUpdate.urgencia = patientToUpdate.clasificarUrgencia();
                 }
                 sessionStorage.setItem('newMessage', '¡Paciente actualizado con éxito!');
                 sessionStorage.removeItem('patientIdToEdit');
             } else {
-                // MODO CREAR
+                // MODO CREAR:
                 const newPatient = new Patient(
                     formData.nombre, formData.apellidoPaterno, formData.apellidoMaterno, formData.rut,
                     parseInt(formData.edad), formData.sexo,
@@ -194,65 +222,50 @@ document.addEventListener('DOMContentLoaded', async () => {
                     parseInt(formData.spo2), parseInt(formData.nivelDolor),
                     formData.alergias, formData.medicamentos, sintomas, formData.diagnostico
                 );
-                await db.savePaciente(newPatient);
+                patients.push(newPatient);
                 sessionStorage.setItem('newMessage', '¡Paciente registrado con éxito!');
             }
 
+            savePatients(patients);
             window.location.href = 'pacientes.html';
         });
     }
 
-    // ── PÁGINA DE PACIENTES ───────────────────────────────────────
+    // --- LÓGICA ESPECÍFICA PARA LA PÁGINA DE PACIENTES ---
     if (document.getElementById('lista-pacientes')) {
         sessionStorage.removeItem('patientIdToEdit');
 
+        // Se revisa si hay un mensaje de éxito para mostrarlo.
         const newMessage = sessionStorage.getItem('newMessage');
         if (newMessage) {
-            ui.showMessage(newMessage, 'alert-success');
+            alert(newMessage); // Muestra el mensaje de éxito en una ventana emergente.
             sessionStorage.removeItem('newMessage');
         }
 
-        // Mostrar spinner mientras carga
-        document.getElementById('lista-pacientes').innerHTML = `
-            <div class="col-12 text-center py-5">
-                <div class="spinner-border text-primary" role="status"></div>
-                <p class="mt-2 text-muted">Cargando pacientes...</p>
-            </div>`;
+        // Se muestra la lista de pacientes al cargar la página.
+        ui.displayPatients(getPatients());
 
-        const pacientes = await db.getPacientes();
-        ui.displayPatients(pacientes);
-
-        // Delegación de eventos para Editar / Eliminar
-        document.getElementById('lista-pacientes').addEventListener('click', async (event) => {
+        // Se usa delegación de eventos para manejar los clics en los botones de "Editar" y "Eliminar".
+        document.getElementById('lista-pacientes').addEventListener('click', (event) => {
+            // Lógica para el botón Editar
             if (event.target.classList.contains('btn-edit')) {
                 event.preventDefault();
-                sessionStorage.setItem('patientIdToEdit', event.target.dataset.id);
+                const patientId = event.target.dataset.id;
+                sessionStorage.setItem('patientIdToEdit', patientId);
                 window.location.href = event.target.href;
             }
 
+            // Lógica para el botón Eliminar
             if (event.target.classList.contains('btn-delete')) {
                 if (confirm('¿Estás seguro de que deseas eliminar a este paciente?')) {
                     const patientId = event.target.dataset.id;
-                    event.target.disabled    = true;
-                    event.target.textContent = 'Eliminando...';
-                    const ok = await db.deletePaciente(patientId);
-                    if (ok) {
-                        const actualizados = await db.getPacientes();
-                        ui.displayPatients(actualizados);
-                        ui.showMessage('Paciente eliminado.', 'alert-info');
-                    } else {
-                        ui.showMessage('Error al eliminar. Intenta nuevamente.', 'alert-danger');
-                    }
+                    let patients = getPatients();
+                    patients = patients.filter(p => p.id != patientId);
+                    savePatients(patients);
+                    ui.displayPatients(patients);
+                    ui.showMessage('Paciente eliminado.', 'alert-info'); // Aquí se sigue usando la UI para el mensaje de eliminación.
                 }
             }
         });
     }
 });
-
-// Función auxiliar para recalcular urgencia sin instanciar Patient completo
-function clasificarUrgencia(sintomas) {
-    const n = sintomas.length;
-    if (n >= 6) return 'Roja';
-    if (n >= 4) return 'Amarillo';
-    return 'Verde';
-}

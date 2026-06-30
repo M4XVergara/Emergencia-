@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clínica Bienestar - Atención Médica</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/favicon_clinica.png">
+    <style>
+        .urgencia-roja     { border-left: 5px solid #dc3545 !important; }
+        .urgencia-amarillo { border-left: 5px solid #ffc107 !important; }
+        .urgencia-verde    { border-left: 5px solid #198754 !important; }
+        .ficha-resumen { background: #f8f9fa; border-radius: 8px; padding: 1.25rem; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <img src="images/logo.png" alt="Logo" class="navbar-logo">
+                <span class="ms-2">Clínica Bienestar</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto" id="user-info"></ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="registro.html">Registro</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="pacientes.html">← Volver a Pacientes</a></li>
+                    <li class="nav-item d-none" id="nav-admin"><a class="nav-link" href="admin-usuarios.html">👥 Usuarios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="logoutUser(event)">Cerrar Sesión</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+
+        <div id="cargando" class="text-center py-5">
+            <div class="spinner-border text-primary"></div>
+            <p class="mt-2 text-muted">Cargando ficha del paciente...</p>
+        </div>
+
+        <div id="contenido" class="d-none">
+
+            <!-- ── RESUMEN DEL PACIENTE (solo lectura) ──────────────── -->
+            <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+                <h2 class="mb-0">🩺 Atención Médica</h2>
+                <span id="badge-urgencia" class="badge fs-6 p-2"></span>
+            </div>
+
+            <div class="ficha-resumen mb-4" id="card-resumen">
+                <div class="row">
+                    <div class="col-md-6 mb-2"><strong>Paciente:</strong> <span id="r-nombre"></span></div>
+                    <div class="col-md-6 mb-2"><strong>RUT:</strong> <span id="r-rut"></span></div>
+                    <div class="col-md-6 mb-2"><strong>Edad:</strong> <span id="r-edad"></span> años — <span id="r-sexo"></span></div>
+                    <div class="col-md-6 mb-2"><strong>Registrado:</strong> <span id="r-fecha"></span></div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-3 mb-1"><strong>Temp:</strong> <span id="r-temp"></span> °C</div>
+                    <div class="col-md-3 mb-1"><strong>Presión:</strong> <span id="r-presion"></span> mmHg</div>
+                    <div class="col-md-3 mb-1"><strong>Pulso:</strong> <span id="r-pulso"></span> bpm</div>
+                    <div class="col-md-3 mb-1"><strong>SpO₂:</strong> <span id="r-spo2"></span> %</div>
+                </div>
+                <div class="row mt-1">
+                    <div class="col-md-4 mb-1"><strong>Dolor:</strong> <span id="r-dolor"></span>/10</div>
+                    <div class="col-md-8 mb-1"><strong>Alergias:</strong> <span id="r-alergias"></span></div>
+                    <div class="col-12 mb-1"><strong>Medicamentos actuales:</strong> <span id="r-medicamentos"></span></div>
+                </div>
+                <hr>
+                <div><strong>Síntomas reportados:</strong> <span id="r-sintomas"></span></div>
+            </div>
+
+            <!-- ── FORMULARIO DE ATENCIÓN MÉDICA ────────────────────── -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">📋 Registro de Atención y Diagnóstico</h4>
+                </div>
+                <div class="card-body">
+                    <form id="atencionForm" novalidate>
+                        <div class="mb-3">
+                            <label for="diagnostico" class="form-label">Diagnóstico</label>
+                            <textarea class="form-control" id="diagnostico" rows="4"
+                                placeholder="Ingrese el diagnóstico del paciente..." maxlength="500"></textarea>
+                            <small class="text-muted">Máximo 500 caracteres</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="observaciones" class="form-label">Observaciones de la atención</label>
+                            <textarea class="form-control" id="observaciones" rows="3"
+                                placeholder="Evolución, indicaciones generales, seguimiento..."></textarea>
+                        </div>
+                        <div class="alert alert-secondary">
+                            <i class="bi bi-info-circle"></i>
+                            Esta atención quedará registrada en el historial clínico del paciente.
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 p-3" id="btnGuardarAtencion">
+                            ✓ Guardar Diagnóstico y Finalizar Atención
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ── ACCESO DIRECTO A RECETA ──────────────────────────── -->
+            <div class="mt-3 d-flex gap-2">
+                <a href="#" id="btn-ir-receta" class="btn btn-outline-info w-100 p-2">
+                    💊 Emitir Receta para este Paciente
+                </a>
+            </div>
+
+            <div id="mensaje-resultado" class="mt-3"></div>
+        </div>
+
+        <div id="error-paciente" class="d-none">
+            <div class="alert alert-danger text-center">
+                <h4>❌ Paciente no encontrado</h4>
+                <p>No se pudo cargar la información. Vuelve a la lista de pacientes.</p>
+                <a href="pacientes.html" class="btn btn-outline-danger">Volver a Pacientes</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center mt-5 p-3 bg-light"><p>Inacap</p></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        let _paciente = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Solo médico y admin pueden acceder a esta página
+            auth.protectPageByRole(['medico', 'admin']);
+            auth.displayUserInfo();
+
+            if (auth.hasRole('admin')) {
+                document.getElementById('nav-admin').classList.remove('d-none');
+            }
+
+            const params    = new URLSearchParams(window.location.search);
+            const patientId = params.get('id');
+
+            if (!patientId) {
+                mostrarError();
+                return;
+            }
+
+            await cargarPaciente(patientId);
+        });
+
+        async function cargarPaciente(patientId) {
+            const pacientes = await db.getPacientes();
+            _paciente = pacientes.find(p => p.id == patientId);
+
+            document.getElementById('cargando').classList.add('d-none');
+
+            if (!_paciente) {
+                mostrarError();
+                return;
+            }
+
+            const p = _paciente;
+            const uMap = {
+                Roja:     { badge: 'bg-danger',            cls: 'urgencia-roja',     label: '🔴 Roja — Grave'        },
+                Amarillo: { badge: 'bg-warning text-dark',  cls: 'urgencia-amarillo', label: '🟡 Amarillo — Moderada' },
+                Verde:    { badge: 'bg-success',            cls: 'urgencia-verde',    label: '🟢 Verde — Leve'        }
+            };
+            const u = uMap[p.urgencia] || { badge: 'bg-secondary', cls: '', label: 'Sin clasificar' };
+
+            document.getElementById('badge-urgencia').className   = 'badge fs-6 p-2 ' + u.badge;
+            document.getElementById('badge-urgencia').textContent = u.label;
+            document.getElementById('card-resumen').classList.add(u.cls);
+
+            document.getElementById('r-nombre').textContent       = `${p.nombre} ${p.apellidoPaterno} ${p.apellidoMaterno}`;
+            document.getElementById('r-rut').textContent          = p.rut;
+            document.getElementById('r-edad').textContent          = p.edad;
+            document.getElementById('r-sexo').textContent          = p.sexo;
+            document.getElementById('r-fecha').textContent        = p.fechaRegistro;
+            document.getElementById('r-temp').textContent          = p.signosVitales.temperatura;
+            document.getElementById('r-presion').textContent       = `${p.signosVitales.presion.sistolica}/${p.signosVitales.presion.diastolica}`;
+            document.getElementById('r-pulso').textContent         = p.signosVitales.pulsaciones;
+            document.getElementById('r-spo2').textContent          = p.signosVitales.spo2;
+            document.getElementById('r-dolor').textContent         = p.informacionClinica.nivelDolor;
+            document.getElementById('r-alergias').textContent      = p.informacionClinica.alergias;
+            document.getElementById('r-medicamentos').textContent  = p.informacionClinica.medicamentos;
+            document.getElementById('r-sintomas').textContent      = (p.sintomas || []).join(', ') || 'No especificados';
+
+            // Precargar diagnóstico si ya existía
+            if (p.diagnostico) {
+                document.getElementById('diagnostico').value = p.diagnostico;
+            }
+
+            // Botón directo a emitir receta con los datos del paciente
+            const nombreCompleto = `${p.nombre} ${p.apellidoPaterno}`;
+            document.getElementById('btn-ir-receta').href =
+                `receta.html?patient_id=${p.id}&rut=${encodeURIComponent(p.rut)}&nombre=${encodeURIComponent(nombreCompleto)}`;
+
+            document.getElementById('contenido').classList.remove('d-none');
+
+            // Envío del formulario de atención
+            document.getElementById('atencionForm').addEventListener('submit', guardarAtencion);
+        }
+
+        async function guardarAtencion(e) {
+            e.preventDefault();
+
+            const diagnostico   = document.getElementById('diagnostico').value.trim();
+            const observaciones = document.getElementById('observaciones').value.trim();
+            const btn           = document.getElementById('btnGuardarAtencion');
+
+            btn.disabled    = true;
+            btn.textContent = 'Guardando...';
+
+            _paciente.diagnostico = diagnostico;
+            const ok = await db.updatePaciente(_paciente);
+
+            // Registrar también en historial_clinico
+            const usuario = auth.getCurrentUser();
+            await _supabase.from('historial_clinico').insert([{
+                patient_id:      _paciente.id,
+                paciente_rut:    _paciente.rut,
+                tipo_registro:   'atencion',
+                descripcion:     observaciones || 'Diagnóstico registrado',
+                datos_clinicos:  {
+                    diagnostico,
+                    urgencia: _paciente.urgencia,
+                    signos_vitales: _paciente.signosVitales
+                },
+                registrado_por:  usuario?.username || 'desconocido',
+                rol_registrador: usuario?.rol || 'desconocido'
+            }]);
+
+            btn.disabled    = false;
+            btn.textContent = '✓ Guardar Diagnóstico y Finalizar Atención';
+
+            const msgEl = document.getElementById('mensaje-resultado');
+            if (ok) {
+                msgEl.innerHTML = `<div class="alert alert-success">
+                    ✓ Atención guardada correctamente.
+                    <a href="pacientes.html" class="ms-2">Volver a la lista</a>
+                </div>`;
+            } else {
+                msgEl.innerHTML = `<div class="alert alert-danger">
+                    Error al guardar. Intenta nuevamente.
+                </div>`;
+            }
+        }
+
+        function mostrarError() {
+            document.getElementById('cargando').classList.add('d-none');
+            document.getElementById('error-paciente').classList.remove('d-none');
+        }
+
+        function logoutUser(e) {
+            e.preventDefault();
+            if (confirm('¿Desea cerrar sesión?')) {
+                auth.logout();
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+</html>

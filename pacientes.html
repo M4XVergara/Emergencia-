@@ -215,6 +215,10 @@
             };
             const u = uMap[p.urgencia] || { cls: '', badge: 'bg-secondary', label: 'Sin clasificar' };
 
+            const btnAtencion = _esMedico
+                ? `<a href="atencion.html?id=${p.id}" class="btn btn-sm btn-success me-1">🩺 Atención</a>`
+                : '';
+
             const btnReceta = _esMedico
                 ? `<a href="receta.html?patient_id=${p.id}&rut=${encodeURIComponent(p.rut)}&nombre=${encodeURIComponent(p.nombre + ' ' + p.apellidoPaterno)}"
                        class="btn btn-sm btn-info me-1">💊 Receta</a>`
@@ -245,6 +249,7 @@
                         ${p.diagnostico ? `<p class="card-text mb-1"><strong>Diagnóstico:</strong> ${p.diagnostico}</p>` : ''}
                         <p class="card-text mb-1"><strong>Alergias:</strong> ${p.informacionClinica.alergias}</p>
                         <div class="mt-3 d-flex justify-content-end flex-wrap gap-1">
+                            ${btnAtencion}
                             ${btnReceta}
                             <a href="registro.html" class="btn btn-sm btn-primary btn-edit" data-id="${p.id}">✏️ Editar</a>
                             <button class="btn btn-sm btn-danger btn-delete" data-id="${p.id}">🗑️ Eliminar</button>

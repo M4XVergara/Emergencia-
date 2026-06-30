@@ -54,6 +54,12 @@ class Auth {
                 this.logout();
                 return false;
             }
+            // Sesión vieja sin rol (de versiones anteriores del sistema) → forzar logout
+            const rolesValidos = ['admin', 'medico', 'recepcionista'];
+            if (!data.rol || !rolesValidos.includes(data.rol)) {
+                this.logout();
+                return false;
+            }
             return true;
         } catch { return false; }
     }
