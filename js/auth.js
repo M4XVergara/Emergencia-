@@ -16,24 +16,37 @@ class Auth {
                 ? `${cleanRut.slice(0, -1).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}-${cleanRut.slice(-1)}`
                 : cleanRut;
 
-            let { data, error } = await _supabase
-                .from('usuarios')
-                .select(selectFields)
-                .eq('username', username)
-                .eq('password', password)
-                .eq('activo', true)
-                .single();
+            const candidates = [username.trim()];
+            if (cleanRut && cleanRut !== username.trim()) {
+                candidates.push(cleanRut);
+            }
+            if (formattedRut && formattedRut !== username.trim()) {
+                candidates.push(formattedRut);
+                candidates.push(formattedRut.toLowerCase());
+            }
+            if (username.trim() !== username.trim().toLowerCase()) {
+                candidates.push(username.trim().toLowerCase());
+            }
 
-            if (!data && formattedRut && formattedRut !== username) {
-                const secondTry = await _supabase
+            let data = null;
+            let error = null;
+            for (const candidate of [...new Set(candidates)]) {
+                const result = await _supabase
                     .from('usuarios')
                     .select(selectFields)
-                    .eq('username', formattedRut)
+                    .eq('username', candidate)
                     .eq('password', password)
                     .eq('activo', true)
                     .single();
-                data = secondTry.data;
-                error = secondTry.error;
+                if (result.error && result.error.code !== 'PGRST116') {
+                    error = result.error;
+                    break;
+                }
+                if (result.data) {
+                    data = result.data;
+                    error = null;
+                    break;
+                }
             }
 
             if (error || !data) {
