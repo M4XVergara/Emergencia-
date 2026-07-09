@@ -59,6 +59,103 @@ class Validator {
         return { isValid: this.errors.length === 0, errors: this.errors };
     }
 
+    validateSolicitud(formData) {
+        this.errors = [];
+        const { nombre, apellidoPaterno, apellidoMaterno, rut, edad, sexo, comuna, telefono, email, motivo, terminosAceptacion } = formData;
+
+        this._checkRequired('Nombre', nombre);
+        this._checkRequired('Apellido Paterno', apellidoPaterno);
+        this._checkRequired('Apellido Materno', apellidoMaterno);
+        this._checkRequired('RUT', rut);
+        this._checkRequired('Edad', edad);
+        this._checkRequired('Sexo', sexo);
+        this._checkRequired('Comuna', comuna);
+        this._checkRequired('Teléfono', telefono);
+        this._checkRequired('Email', email);
+        this._checkRequired('Motivo', motivo);
+        if (!terminosAceptacion) {
+            this.errors.push('Debes aceptar los términos para continuar.');
+        }
+
+        if (rut && !this._validateRut(rut)) {
+            this.errors.push('El RUT ingresado no es válido.');
+        }
+
+        this._checkIsNumber('Edad', edad);
+        this._checkGreaterThan('Edad', edad, 0);
+
+        if (telefono && !this._validatePhone(telefono)) {
+            this.errors.push('El teléfono debe tener un formato válido, por ejemplo +56912345678.');
+        }
+        if (email && !this._validateEmail(email)) {
+            this.errors.push('El correo electrónico no tiene un formato válido.');
+        }
+
+        return { isValid: this.errors.length === 0, errors: this.errors };
+    }
+
+    validateReceta(formData) {
+        this.errors = [];
+        const { medicamento, dosis, frecuencia, duracion } = formData;
+
+        this._checkRequired('Medicamento', medicamento);
+        this._checkRequired('Dosis', dosis);
+        this._checkRequired('Frecuencia', frecuencia);
+        this._checkRequired('Duración', duracion);
+
+        return { isValid: this.errors.length === 0, errors: this.errors };
+    }
+
+    validateAtencion(formData) {
+        this.errors = [];
+        const { diagnostico } = formData;
+        if (diagnostico && diagnostico.length > 500) {
+            this.errors.push('El diagnóstico no puede exceder 500 caracteres.');
+        }
+        return { isValid: this.errors.length === 0, errors: this.errors };
+    }
+
+    validatePatientRegistration(formData) {
+        this.errors = [];
+        const { nombre, apellidoPaterno, apellidoMaterno, rut, email, password, confirmPassword } = formData;
+
+        this._checkRequired('Nombre', nombre);
+        this._checkRequired('Apellido Paterno', apellidoPaterno);
+        this._checkRequired('Apellido Materno', apellidoMaterno);
+        this._checkRequired('RUT', rut);
+        this._checkRequired('Email', email);
+        this._checkRequired('Contraseña', password);
+        this._checkRequired('Confirmar contraseña', confirmPassword);
+
+        if (rut && !this._validateRut(rut)) {
+            this.errors.push('El RUT ingresado no es válido.');
+        }
+        if (email && !this._validateEmail(email)) {
+            this.errors.push('El correo electrónico no tiene un formato válido.');
+        }
+        if (password && password.length < 6) {
+            this.errors.push('La contraseña debe tener al menos 6 caracteres.');
+        }
+        if (password && confirmPassword && password !== confirmPassword) {
+            this.errors.push('Las contraseñas no coinciden.');
+        }
+
+        return { isValid: this.errors.length === 0, errors: this.errors };
+    }
+
+    _validateEmail(value) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    }
+
+    _validatePhone(value) {
+        return /^\+?\d{8,15}$/.test(value.replace(/\s+/g, ''));
+    }
+
+    _validateRut(value) {
+        const rut = value.replace(/[^0-9kK]/g, '').toUpperCase();
+        return rut.length >= 8 && rut.length <= 10;
+    }
+
     // --- MÉTODOS AUXILIARES ("privados") ---
     // El guion bajo (_) es una convención para indicar que estos métodos son para uso interno de la clase.
 

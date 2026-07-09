@@ -11,15 +11,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- FUNCIONES AUXILIARES (HELPERS) ---
 
-    // Función para obtener la lista de pacientes desde el almacenamiento local del navegador.
-    // JSON.parse() convierte el texto guardado en localStorage de nuevo a un arreglo de objetos JavaScript.
-    // Si no hay nada guardado ('null'), devuelve un arreglo vacío [].
-    const getPatients = () => JSON.parse(localStorage.getItem('pacientes')) || [];
-
-    // Función para guardar la lista de pacientes en el almacenamiento local.
-    // JSON.stringify() convierte nuestro arreglo de objetos JavaScript a un string de texto, que es como localStorage lo puede guardar.
-    const savePatients = (patients) => localStorage.setItem('pacientes', JSON.stringify(patients));
-
+    // Función para obtener la lista de pacientes desde Supabase.
+    const getPatients = async () => {
+        try {
+            return await db.getPacientes();
+        } catch (err) {
+            console.error('Error al obtener pacientes desde Supabase:', err);
+            ui.showMessage('No se pudieron cargar los pacientes. Intenta nuevamente más tarde.', 'alert-danger');
+            return [];
+        }
+    };
 
     // --- LÓGICA ESPECÍFICA PARA LA PÁGINA DE REGISTRO ---
 
@@ -65,18 +66,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Si se encontró un ID, significa que venimos de presionar un botón "Editar".
         if (patientIdToEdit) {
-            // Se cambia la UI para que refleje el modo edición.
-            formTitle.textContent = 'Editar Información del Paciente';
-            submitButton.textContent = 'Guardar Cambios';
-            submitButton.classList.remove('btn-success'); // Quitamos el color verde.
-            submitButton.classList.add('btn-primary');    // Añadimos el color azul.
+            (async () => {
+                // Se cambia la UI para que refleje el modo edición.
+                formTitle.textContent = 'Editar Información del Paciente';
+                submitButton.textContent = 'Guardar Cambios';
+                submitButton.classList.remove('btn-success'); // Quitamos el color verde.
+                submitButton.classList.add('btn-primary');    // Añadimos el color azul.
 
-            // Se busca al paciente específico en nuestro arreglo de pacientes.
-            const patients = getPatients();
-            const patient = patients.find(p => p.id == patientIdToEdit);
+                const patients = await getPatients();
+                const patient = patients.find(p => p.id == patientIdToEdit);
 
-            // Si se encontró al paciente, se rellenan todos los campos del formulario con sus datos.
-            if (patient) {
+                if (!patient) {
+                    ui.showMessage('No se encontró el paciente que intentas editar.', 'alert-warning');
+                    return;
+                }
+
                 document.getElementById('nombre').value = patient.nombre;
                 document.getElementById('apellidoPaterno').value = patient.apellidoPaterno;
                 document.getElementById('apellidoMaterno').value = patient.apellidoMaterno;
@@ -93,12 +97,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('medicamentos').value = patient.informacionClinica.medicamentos;
                 // Nota: el diagnóstico ya no se edita aquí, ahora vive en atencion.html
 
-                // Se marcan los checkboxes correspondientes a los síntomas del paciente.
                 patient.sintomas.forEach(sintoma => {
                     const checkbox = document.querySelector(`input[type="checkbox"][value="${sintoma}"]`);
                     if (checkbox) checkbox.checked = true;
                 });
-            }
+            })();
         }
 
         // --- LISTENERS DE FORMATO Y VALIDACIÓN EN TIEMPO REAL ---
@@ -116,10 +119,9 @@ document.addEventListener('DOMContentLoaded', () => {
         numberInputsToSanitize.forEach(id => { const input = document.getElementById(id); if (input) { input.addEventListener('keydown', blockInvalidKeysHandler); } });
 
         // --- LISTENER PRINCIPAL DEL FORMULARIO (AL ENVIAR) ---
-        form.addEventListener('submit', (event) => {
+        form.addEventListener('submit', async (event) => {
             event.preventDefault();
 
-            // 1. Se recolectan todos los datos del formulario.
             const formData = {
                 nombre: document.getElementById('nombre').value,
                 apellidoPaterno: document.getElementById('apellidoPaterno').value,
@@ -138,14 +140,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 diagnostico: '' // El diagnóstico se asigna posteriormente en atencion.html
             };
 
-            // 2. Se pasan los datos al validador.
             const validationResult = validator.validateForm(formData);
             if (!validationResult.isValid) {
-                // --- INICIO: NUEVA LÓGICA DE VISUALIZACIÓN DE ERRORES ---
-                // Se limpian los errores visuales de la vez anterior.
                 document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
 
-                // Este 'mapa' ayuda a conectar el texto del error (ej: 'Nombre') con el ID real del campo (ej: 'nombre').
                 const fieldMap = {
                     'Nombre': 'nombre', 'Apellido Paterno': 'apellidoPaterno', 'Apellido Materno': 'apellidoMaterno',
                     'RUT': 'rut', 'Edad': 'edad', 'Sexo': 'sexo', 'Temperatura': 'temperatura',
@@ -154,80 +152,79 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Alergias Conocidas': 'alergias', 'Medicamentos Actuales': 'medicamentos'
                 };
 
-                // Se recorre cada mensaje de error que generó el validador.
                 validationResult.errors.forEach(error => {
-                    const match = error.match(/'(.+?)'/); // Se extrae el nombre del campo del mensaje de error (ej: 'Nombre').
+                    const match = error.match(/'(.+?)'/);
                     if (match) {
                         const label = match[1];
-                        const id = fieldMap[label]; // Se busca el ID correspondiente en el mapa.
+                        const id = fieldMap[label];
                         if (id) {
-                            const field = document.getElementById(id); // Se obtiene el elemento del campo.
-                            if (field) {
-                                field.classList.add('input-error'); // Se le añade la clase para el borde rojo.
-                            }
+                            const field = document.getElementById(id);
+                            if (field) field.classList.add('input-error');
                         }
                     }
                 });
 
-                // Se muestran todos los errores en una ventana emergente del navegador.
-                alert(validationResult.errors.join('\n'));
-                return; // Se detiene la ejecución para no registrar al paciente.
-                 // --- FIN: NUEVA LÓGICA DE VISUALIZACIÓN DE ERRORES ---
+                ui.showMessage(`<ul>${validationResult.errors.map(e => `<li>${e}</li>`).join('')}</ul>`, 'alert-danger');
+                return;
             }
 
-            // 3. Se recolectan los síntomas.
             const sintomas = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
             const otrosSintomas = document.getElementById('otrosSintomas').value.trim();
             if (otrosSintomas) {
                 sintomas.push(...otrosSintomas.split(',').map(s => s.trim()).filter(s => s));
             }
 
-            // --- LÓGICA PARA DECIDIR SI CREAR O ACTUALIZAR ---
-            let patients = getPatients();
-            if (patientIdToEdit) {
-                // MODO ACTUALIZAR:
-                const patientIndex = patients.findIndex(p => p.id == patientIdToEdit);
-                if (patientIndex > -1) {
-                    const patientToUpdate = patients[patientIndex];
-                    // Se actualizan todas las propiedades del paciente existente.
-                    patientToUpdate.nombre = formData.nombre;
-                    patientToUpdate.apellidoPaterno = formData.apellidoPaterno;
-                    patientToUpdate.apellidoMaterno = formData.apellidoMaterno;
-                    patientToUpdate.rut = formData.rut;
-                    patientToUpdate.edad = parseInt(formData.edad);
-                    patientToUpdate.sexo = formData.sexo;
-                    patientToUpdate.signosVitales.temperatura = parseFloat(formData.temperatura);
-                    patientToUpdate.signosVitales.presion.sistolica = parseInt(formData.presionSistolica);
-                    patientToUpdate.signosVitales.presion.diastolica = parseInt(formData.presionDiastolica);
-                    patientToUpdate.signosVitales.pulsaciones = parseInt(formData.pulsaciones);
-                    patientToUpdate.signosVitales.spo2 = parseInt(formData.spo2);
-                    patientToUpdate.informacionClinica.nivelDolor = parseInt(formData.nivelDolor);
-                    patientToUpdate.informacionClinica.alergias = formData.alergias;
-                    patientToUpdate.informacionClinica.medicamentos = formData.medicamentos;
-                    // No se modifica el diagnóstico aquí: se preserva el que ya tenía
-                    // (su edición ocurre exclusivamente en atencion.html)
-                    patientToUpdate.sintomas = sintomas;
-                    patientToUpdate.detectarSintomasAutomaticos();
-                    patientToUpdate.urgencia = patientToUpdate.clasificarUrgencia();
-                }
-                sessionStorage.setItem('newMessage', '¡Paciente actualizado con éxito!');
-                sessionStorage.removeItem('patientIdToEdit');
-            } else {
-                // MODO CREAR:
-                const newPatient = new Patient(
-                    formData.nombre, formData.apellidoPaterno, formData.apellidoMaterno, formData.rut,
-                    parseInt(formData.edad), formData.sexo,
-                    parseFloat(formData.temperatura), parseInt(formData.presionSistolica),
-                    parseInt(formData.presionDiastolica), parseInt(formData.pulsaciones),
-                    parseInt(formData.spo2), parseInt(formData.nivelDolor),
-                    formData.alergias, formData.medicamentos, sintomas, formData.diagnostico
-                );
-                patients.push(newPatient);
-                sessionStorage.setItem('newMessage', '¡Paciente registrado con éxito!');
-            }
+            try {
+                if (patientIdToEdit) {
+                    const patients = await getPatients();
+                    const patientIndex = patients.findIndex(p => p.id == patientIdToEdit);
+                    if (patientIndex > -1) {
+                        const patientToUpdate = patients[patientIndex];
+                        patientToUpdate.nombre = formData.nombre;
+                        patientToUpdate.apellidoPaterno = formData.apellidoPaterno;
+                        patientToUpdate.apellidoMaterno = formData.apellidoMaterno;
+                        patientToUpdate.rut = formData.rut;
+                        patientToUpdate.edad = parseInt(formData.edad);
+                        patientToUpdate.sexo = formData.sexo;
+                        patientToUpdate.signosVitales.temperatura = parseFloat(formData.temperatura);
+                        patientToUpdate.signosVitales.presion.sistolica = parseInt(formData.presionSistolica);
+                        patientToUpdate.signosVitales.presion.diastolica = parseInt(formData.presionDiastolica);
+                        patientToUpdate.signosVitales.pulsaciones = parseInt(formData.pulsaciones);
+                        patientToUpdate.signosVitales.spo2 = parseInt(formData.spo2);
+                        patientToUpdate.informacionClinica.nivelDolor = parseInt(formData.nivelDolor);
+                        patientToUpdate.informacionClinica.alergias = formData.alergias;
+                        patientToUpdate.informacionClinica.medicamentos = formData.medicamentos;
+                        patientToUpdate.sintomas = sintomas;
+                        patientToUpdate.detectarSintomasAutomaticos();
+                        patientToUpdate.urgencia = patientToUpdate.clasificarUrgencia();
 
-            savePatients(patients);
-            window.location.href = 'pacientes.html';
+                        const ok = await db.updatePaciente(patientToUpdate);
+                        if (!ok) throw new Error('No se pudo actualizar el paciente.');
+                        sessionStorage.setItem('newMessage', '¡Paciente actualizado con éxito!');
+                        sessionStorage.removeItem('patientIdToEdit');
+                    } else {
+                        throw new Error('Paciente no encontrado para actualizar.');
+                    }
+                } else {
+                    const newPatient = new Patient(
+                        formData.nombre, formData.apellidoPaterno, formData.apellidoMaterno, formData.rut,
+                        parseInt(formData.edad), formData.sexo,
+                        parseFloat(formData.temperatura), parseInt(formData.presionSistolica),
+                        parseInt(formData.presionDiastolica), parseInt(formData.pulsaciones),
+                        parseInt(formData.spo2), parseInt(formData.nivelDolor),
+                        formData.alergias, formData.medicamentos, sintomas, formData.diagnostico
+                    );
+
+                    const savedPatient = await db.savePaciente(newPatient);
+                    if (!savedPatient) throw new Error('No se pudo registrar al paciente.');
+                    sessionStorage.setItem('newMessage', '¡Paciente registrado con éxito!');
+                }
+
+                window.location.href = 'pacientes.html';
+            } catch (err) {
+                console.error(err);
+                ui.showMessage(`Error al guardar el paciente: ${err.message}`, 'alert-danger');
+            }
         });
     }
 
