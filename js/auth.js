@@ -10,7 +10,7 @@ class Auth {
     // ── LOGIN: consulta Supabase ────────────────────────────────
     async login(username, password) {
         try {
-            const selectFields = 'username, nombre, rol, activo, rut';
+            const selectFields = 'username, nombre, rol, activo';
             const cleanRut = username.replace(/[^0-9kK]/gi, '').toUpperCase();
             const formattedRut = cleanRut.length > 1
                 ? `${cleanRut.slice(0, -1).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}-${cleanRut.slice(-1)}`
@@ -36,22 +36,6 @@ class Auth {
                 error = secondTry.error;
             }
 
-            if (!data) {
-                try {
-                    const fallback = await _supabase
-                        .from('usuarios')
-                        .select(selectFields)
-                        .eq('rut', username)
-                        .eq('password', password)
-                        .eq('activo', true)
-                        .single();
-                    data = fallback.data;
-                    error = fallback.error;
-                } catch (fallbackError) {
-                    console.warn('Login fallback por rut no disponible:', fallbackError.message);
-                }
-            }
-
             if (error || !data) {
                 return { success: false, message: 'Usuario o contraseña incorrectos' };
             }
@@ -60,7 +44,7 @@ class Auth {
                 username:  data.username,
                 nombre:    data.nombre,
                 rol:       data.rol,
-                rut:       data.rut || null,
+                rut:       data.rut || data.username || null,
                 loginTime: new Date().toISOString(),
                 expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString()
             };
