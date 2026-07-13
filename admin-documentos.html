@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clínica Bienestar - Documentos Médicos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/favicon_clinica.png">
+    <style>
+        /* ── Zona de arrastre ───────────────────────────────────── */
+        #drop-zone {
+            border: 3px dashed #0d6efd;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            background: #f0f6ff;
+        }
+        #drop-zone.drag-over {
+            background: #d0e8ff;
+            border-color: #0a58ca;
+        }
+        #drop-zone i { font-size: 3rem; color: #0d6efd; }
+        #file-input { display: none; }
+
+        /* ── Vista previa ───────────────────────────────────────── */
+        #preview-box { max-height: 280px; overflow: hidden; border-radius: 8px; }
+        #preview-box img { max-height: 280px; object-fit: contain; width: 100%; }
+        #preview-box iframe { width: 100%; height: 280px; border: none; }
+
+        /* ── Barra de progreso ──────────────────────────────────── */
+        #barra-progreso { transition: width 0.3s ease; }
+
+        /* ── Tarjetas de documentos ─────────────────────────────── */
+        .doc-card { transition: transform 0.15s, box-shadow 0.15s; }
+        .doc-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
+        .doc-thumb { width: 100%; height: 140px; object-fit: cover; border-radius: 6px; background: #e9ecef; }
+        .doc-thumb-pdf {
+            width: 100%; height: 140px; display: flex; align-items: center;
+            justify-content: center; background: #fff3cd; border-radius: 6px;
+            font-size: 3rem; color: #dc3545;
+        }
+        .badge-tipo { font-size: 0.7rem; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <img src="images/logo.png" alt="Logo" class="navbar-logo">
+                <span class="ms-2">Clínica Bienestar</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto" id="user-info"></ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="registro.html">Registro</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pacientes.html">Pacientes</a></li>
+                    <li class="nav-item"><a class="nav-link" href="admin-usuarios.html">👥 Usuarios</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="admin-documentos.html">📁 Documentos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="logoutUser(event)">Cerrar Sesión</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        <h2 class="mb-1">📁 Digitalización de Documentos Médicos</h2>
+        <p class="text-muted mb-4">Sube fotografías o escaneos de documentos médicos físicos de pacientes.</p>
+
+        <div class="row g-4">
+
+            <!-- ── Panel de subida ──────────────────────────────── -->
+            <div class="col-lg-5">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">📤 Subir Documento</h5>
+                    </div>
+                    <div class="card-body">
+
+                        <!-- Datos del paciente -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">RUT del Paciente <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="rut-busqueda"
+                                    placeholder="12.345.678-9" maxlength="12">
+                                <button class="btn btn-outline-primary" id="btn-buscar-paciente" type="button">
+                                    🔍 Buscar
+                                </button>
+                            </div>
+                            <div id="info-paciente-encontrado" class="mt-2 d-none">
+                                <div class="alert alert-success py-2 mb-0">
+                                    <i class="bi bi-person-check-fill"></i>
+                                    <span id="nombre-paciente-encontrado"></span>
+                                </div>
+                            </div>
+                            <div id="info-paciente-no-encontrado" class="mt-2 d-none">
+                                <div class="alert alert-warning py-2 mb-0">
+                                    ⚠️ Paciente no encontrado. Puedes ingresar el nombre manualmente.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="campo-nombre-manual" style="display:none;">
+                            <label class="form-label">Nombre del Paciente <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nombre-manual"
+                                placeholder="Nombre completo del paciente">
+                        </div>
+
+                        <!-- Tipo de documento -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tipo de Documento <span class="text-danger">*</span></label>
+                            <select class="form-select" id="tipo-documento">
+                                <option value="">Seleccionar...</option>
+                                <option value="examen">🧪 Examen de laboratorio</option>
+                                <option value="imagen">🩻 Imagen médica (Rx, ECO, TAC)</option>
+                                <option value="informe">📋 Informe médico</option>
+                                <option value="receta_externa">💊 Receta externa</option>
+                                <option value="epicrisis">🏥 Epicrisis / Alta hospitalaria</option>
+                                <option value="consentimiento">✍️ Consentimiento informado</option>
+                                <option value="otro">📄 Otro</option>
+                            </select>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="mb-3">
+                            <label class="form-label">Descripción <span class="text-muted">(opcional)</span></label>
+                            <textarea class="form-control" id="descripcion-doc" rows="2"
+                                placeholder="Ej: Hemograma completo - 15/06/2026"></textarea>
+                        </div>
+
+                        <!-- Zona de arrastre / selección de archivo -->
+                        <div id="drop-zone" class="mb-3">
+                            <i class="bi bi-cloud-upload-fill d-block mb-2"></i>
+                            <p class="mb-1 fw-bold">Arrastra el archivo aquí</p>
+                            <p class="text-muted small mb-2">o haz clic para seleccionar</p>
+                            <span class="badge bg-secondary">JPG · PNG · PDF</span>
+                            <p class="text-muted small mt-2 mb-0">Máximo 10 MB</p>
+                            <input type="file" id="file-input" accept=".jpg,.jpeg,.png,.pdf">
+                        </div>
+
+                        <!-- Vista previa -->
+                        <div id="preview-section" class="mb-3 d-none">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="fw-bold text-muted">Vista previa</small>
+                                <button class="btn btn-sm btn-outline-danger" id="btn-quitar-archivo">✕ Quitar</button>
+                            </div>
+                            <div id="preview-box"></div>
+                            <small class="text-muted mt-1 d-block" id="info-archivo"></small>
+                        </div>
+
+                        <!-- Barra de progreso -->
+                        <div id="progreso-section" class="mb-3 d-none">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small>Subiendo archivo...</small>
+                                <small id="pct-texto">0%</small>
+                            </div>
+                            <div class="progress">
+                                <div id="barra-progreso" class="progress-bar progress-bar-striped progress-bar-animated"
+                                    style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Error / éxito -->
+                        <div id="msg-upload" class="d-none"></div>
+
+                        <!-- Botón subir -->
+                        <button class="btn btn-primary w-100 p-3" id="btn-subir" disabled>
+                            <i class="bi bi-upload me-1"></i> Subir Documento
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Panel de documentos subidos ─────────────────── -->
+            <div class="col-lg-7">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">📂 Documentos Digitalizados</h5>
+                        <div class="d-flex gap-2 align-items-center">
+                            <input type="text" class="form-control form-control-sm" id="filtro-rut"
+                                placeholder="Filtrar por RUT..." style="width:160px;">
+                            <span class="badge bg-secondary" id="total-docs">0</span>
+                        </div>
+                    </div>
+                    <div class="card-body" style="max-height: 620px; overflow-y: auto;">
+                        <div id="spinner-docs" class="text-center py-4">
+                            <div class="spinner-border text-primary"></div>
+                            <p class="mt-2 text-muted">Cargando documentos...</p>
+                        </div>
+                        <div id="lista-docs" class="row g-3"></div>
+                        <div id="sin-docs" class="text-center py-4 text-muted d-none">
+                            <i class="bi bi-folder2-open" style="font-size:2.5rem"></i>
+                            <p class="mt-2">No hay documentos subidos aún.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modal de visualización -->
+    <div class="modal fade" id="modalDoc" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-titulo">Documento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-2" id="modal-contenido" style="min-height:400px;"></div>
+                <div class="modal-footer">
+                    <a href="#" id="modal-descargar" class="btn btn-primary" target="_blank" download>
+                        <i class="bi bi-download"></i> Descargar
+                    </a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación de eliminación -->
+    <div class="modal fade" id="modalEliminar" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">🗑️ Eliminar Documento</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas eliminar <strong id="nombre-doc-eliminar"></strong>?</p>
+                    <p class="text-muted small">Esta acción es irreversible. El archivo se eliminará del servidor.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btn-confirmar-eliminar">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center mt-5 p-3 bg-light"><p>Inacap</p></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+    // ════════════════════════════════════════════════════════════
+    //  ESTADO GLOBAL
+    // ════════════════════════════════════════════════════════════
+    let _archivoSeleccionado = null;   // File object
+    let _pacienteEncontrado  = null;   // { id, nombre, rut }
+    let _todosLosDocs        = [];     // Array de filas de BD
+    let _docAEliminar        = null;   // { id, storage_path, nombre_archivo }
+
+    // ════════════════════════════════════════════════════════════
+    //  INICIALIZACIÓN
+    // ════════════════════════════════════════════════════════════
+    document.addEventListener('DOMContentLoaded', async () => {
+        auth.protectPageByRole(['admin']);
+        auth.displayUserInfo();
+        await cargarDocumentos();
+        inicializarEventos();
+    });
+
+    // ════════════════════════════════════════════════════════════
+    //  EVENTOS
+    // ════════════════════════════════════════════════════════════
+    function inicializarEventos() {
+
+        // Zona de arrastre
+        const dropZone  = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) procesarArchivo(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) procesarArchivo(e.target.files[0]);
+        });
+
+        // Quitar archivo
+        document.getElementById('btn-quitar-archivo').addEventListener('click', quitarArchivo);
+
+        // Buscar paciente
+        document.getElementById('btn-buscar-paciente').addEventListener('click', buscarPaciente);
+        document.getElementById('rut-busqueda').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') buscarPaciente();
+        });
+        document.getElementById('rut-busqueda').addEventListener('input', (e) => {
+            // Formateo automático del RUT
+            let rut  = e.target.value.replace(/[^0-9kK]/g, '').slice(0, 10);
+            let body = rut.slice(0, -1);
+            let dv   = rut.slice(-1);
+            if (rut.length > 1) {
+                body = body.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+                e.target.value = `${body}-${dv}`;
+            } else {
+                e.target.value = rut;
+            }
+        });
+
+        // Botón subir
+        document.getElementById('btn-subir').addEventListener('click', subirDocumento);
+
+        // Filtro por RUT
+        document.getElementById('filtro-rut').addEventListener('input', (e) => {
+            const filtro = e.target.value.trim().toLowerCase();
+            const docs   = filtro
+                ? _todosLosDocs.filter(d => d.rut_paciente.toLowerCase().includes(filtro) ||
+                                            d.nombre_paciente.toLowerCase().includes(filtro))
+                : _todosLosDocs;
+            renderDocumentos(docs);
+        });
+
+        // Modal eliminación
+        document.getElementById('btn-confirmar-eliminar').addEventListener('click', eliminarDocumento);
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  SELECCIÓN Y VISTA PREVIA DEL ARCHIVO
+    // ════════════════════════════════════════════════════════════
+    function procesarArchivo(file) {
+        const tiposPermitidos = ['image/jpeg', 'image/png', 'application/pdf'];
+        const maxBytes        = 10 * 1024 * 1024; // 10 MB
+
+        if (!tiposPermitidos.includes(file.type)) {
+            mostrarMsgUpload('Solo se permiten archivos JPG, PNG o PDF.', 'danger');
+            return;
+        }
+        if (file.size > maxBytes) {
+            mostrarMsgUpload('El archivo supera el límite de 10 MB.', 'danger');
+            return;
+        }
+
+        _archivoSeleccionado = file;
+        ocultarMsgUpload();
+
+        // Vista previa
+        const previewBox  = document.getElementById('preview-box');
+        const infoArchivo = document.getElementById('info-archivo');
+        previewBox.innerHTML = '';
+
+        if (file.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.src   = URL.createObjectURL(file);
+            img.className = 'img-fluid rounded';
+            previewBox.appendChild(img);
+        } else {
+            // PDF — mostrar ícono
+            previewBox.innerHTML = `
+                <div style="background:#fff3cd;border-radius:8px;padding:30px;text-align:center;">
+                    <i class="bi bi-file-earmark-pdf-fill text-danger" style="font-size:4rem;"></i>
+                    <p class="mt-2 mb-0 fw-bold">${file.name}</p>
+                </div>`;
+        }
+
+        infoArchivo.textContent = `${file.name} · ${(file.size / 1024).toFixed(1)} KB`;
+        document.getElementById('preview-section').classList.remove('d-none');
+        actualizarBotonSubir();
+    }
+
+    function quitarArchivo() {
+        _archivoSeleccionado = null;
+        document.getElementById('preview-section').classList.add('d-none');
+        document.getElementById('preview-box').innerHTML = '';
+        document.getElementById('file-input').value = '';
+        actualizarBotonSubir();
+        ocultarMsgUpload();
+    }
+
+    function actualizarBotonSubir() {
+        const tieneArchivo   = !!_archivoSeleccionado;
+        const tieneRut       = document.getElementById('rut-busqueda').value.trim().length > 0;
+        const tieneTipo      = document.getElementById('tipo-documento').value !== '';
+        document.getElementById('btn-subir').disabled = !(tieneArchivo && tieneRut && tieneTipo);
+    }
+
+    // Habilitar botón cuando cambien los selectores
+    ['rut-busqueda', 'tipo-documento'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', actualizarBotonSubir);
+        document.getElementById(id)?.addEventListener('input',  actualizarBotonSubir);
+    });
+
+    // ════════════════════════════════════════════════════════════
+    //  BÚSQUEDA DE PACIENTE
+    // ════════════════════════════════════════════════════════════
+    async function buscarPaciente() {
+        const rut = document.getElementById('rut-busqueda').value.trim();
+        if (!rut) return;
+
+        document.getElementById('info-paciente-encontrado').classList.add('d-none');
+        document.getElementById('info-paciente-no-encontrado').classList.add('d-none');
+        document.getElementById('campo-nombre-manual').style.display = 'none';
+
+        const { data } = await _supabase
+            .from('pacientes')
+            .select('patient_id, nombre, apellido_paterno, apellido_materno, rut')
+            .eq('rut', rut)
+            .limit(1)
+            .maybeSingle();
+
+        if (data) {
+            _pacienteEncontrado = {
+                id:     data.patient_id,
+                nombre: `${data.nombre} ${data.apellido_paterno} ${data.apellido_materno}`,
+                rut:    data.rut
+            };
+            document.getElementById('nombre-paciente-encontrado').textContent =
+                ` Paciente: ${_pacienteEncontrado.nombre}`;
+            document.getElementById('info-paciente-encontrado').classList.remove('d-none');
+        } else {
+            _pacienteEncontrado = null;
+            document.getElementById('info-paciente-no-encontrado').classList.remove('d-none');
+            document.getElementById('campo-nombre-manual').style.display = 'block';
+        }
+        actualizarBotonSubir();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  SUBIDA A SUPABASE STORAGE
+    // ════════════════════════════════════════════════════════════
+    async function subirDocumento() {
+        if (!_archivoSeleccionado) return;
+
+        const rut          = document.getElementById('rut-busqueda').value.trim();
+        const tipoDoc      = document.getElementById('tipo-documento').value;
+        const descripcion  = document.getElementById('descripcion-doc').value.trim();
+        const nombreManual = document.getElementById('nombre-manual').value.trim();
+
+        if (!rut || !tipoDoc) {
+            mostrarMsgUpload('Completa el RUT y el tipo de documento.', 'danger');
+            return;
+        }
+
+        const nombrePaciente = _pacienteEncontrado
+            ? _pacienteEncontrado.nombre
+            : (nombreManual || 'Paciente desconocido');
+
+        const patientId = _pacienteEncontrado?.id || null;
+
+        // ID único del documento
+        const docId      = 'DOC-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5).toUpperCase();
+        const extension  = _archivoSeleccionado.name.split('.').pop().toLowerCase();
+        // Ruta dentro del bucket: rut/docId.ext
+        const rutLimpio  = rut.replace(/[^0-9kK]/gi, '');
+        const storagePath = `${rutLimpio}/${docId}.${extension}`;
+
+        // Deshabilitar botón y mostrar progreso
+        const btn = document.getElementById('btn-subir');
+        btn.disabled    = true;
+        btn.textContent = 'Subiendo...';
+        document.getElementById('progreso-section').classList.remove('d-none');
+        simularProgreso(); // Supabase JS no expone progreso real, lo simulamos
+
+        ocultarMsgUpload();
+
+        // ── Subir a Storage ──────────────────────────────────────
+        const { data: uploadData, error: uploadError } = await _supabase.storage
+            .from('documentos-medicos')
+            .upload(storagePath, _archivoSeleccionado, {
+                cacheControl: '3600',
+                upsert: false,
+                contentType: _archivoSeleccionado.type
+            });
+
+        if (uploadError) {
+            detenerProgreso();
+            mostrarMsgUpload('Error al subir el archivo: ' + uploadError.message, 'danger');
+            btn.disabled    = false;
+            btn.textContent = '⬆️ Subir Documento';
+            return;
+        }
+
+        // ── Obtener URL pública ──────────────────────────────────
+        const { data: urlData } = _supabase.storage
+            .from('documentos-medicos')
+            .getPublicUrl(storagePath);
+
+        const urlPublica = urlData.publicUrl;
+
+        // ── Guardar metadata en la tabla ─────────────────────────
+        const { error: dbError } = await _supabase
+            .from('documentos_medicos')
+            .insert([{
+                documento_id:    docId,
+                patient_id:      patientId,
+                rut_paciente:    rut,
+                nombre_paciente: nombrePaciente,
+                tipo_documento:  tipoDoc,
+                descripcion:     descripcion || null,
+                nombre_archivo:  _archivoSeleccionado.name,
+                tipo_archivo:    _archivoSeleccionado.type,
+                storage_path:    storagePath,
+                url_publica:     urlPublica,
+                tamanio_bytes:   _archivoSeleccionado.size,
+                subido_por:      auth.getUsername() || 'admin'
+            }]);
+
+        detenerProgreso(true);
+
+        if (dbError) {
+            mostrarMsgUpload('Archivo subido pero error al guardar datos: ' + dbError.message, 'warning');
+        } else {
+            mostrarMsgUpload('✓ Documento subido correctamente.', 'success');
+            limpiarFormulario();
+            await cargarDocumentos();
+        }
+
+        btn.disabled    = false;
+        btn.innerHTML   = '<i class="bi bi-upload me-1"></i> Subir Documento';
+    }
+
+    // Simulador de barra de progreso (Supabase JS no expone eventos de progreso)
+    let _progresoTimer = null;
+    function simularProgreso() {
+        let pct = 0;
+        const barra  = document.getElementById('barra-progreso');
+        const texto  = document.getElementById('pct-texto');
+        _progresoTimer = setInterval(() => {
+            pct = Math.min(pct + Math.random() * 15, 85);
+            barra.style.width = pct + '%';
+            texto.textContent = Math.round(pct) + '%';
+        }, 300);
+    }
+    function detenerProgreso(completo = false) {
+        clearInterval(_progresoTimer);
+        const barra = document.getElementById('barra-progreso');
+        const texto = document.getElementById('pct-texto');
+        barra.style.width = completo ? '100%' : '0%';
+        texto.textContent = completo ? '100%' : '0%';
+        setTimeout(() => {
+            document.getElementById('progreso-section').classList.add('d-none');
+            barra.style.width = '0%';
+        }, 800);
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  CARGAR Y RENDERIZAR DOCUMENTOS
+    // ════════════════════════════════════════════════════════════
+    async function cargarDocumentos() {
+        const { data, error } = await _supabase
+            .from('documentos_medicos')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        document.getElementById('spinner-docs').classList.add('d-none');
+
+        if (error) {
+            console.error(error);
+            return;
+        }
+        _todosLosDocs = data || [];
+        document.getElementById('total-docs').textContent = _todosLosDocs.length;
+        renderDocumentos(_todosLosDocs);
+    }
+
+    function renderDocumentos(docs) {
+        const lista  = document.getElementById('lista-docs');
+        const sinDoc = document.getElementById('sin-docs');
+        lista.innerHTML = '';
+
+        if (docs.length === 0) {
+            sinDoc.classList.remove('d-none');
+            return;
+        }
+        sinDoc.classList.add('d-none');
+
+        const tipoLabel = {
+            examen:          '🧪 Examen',
+            imagen:          '🩻 Imagen médica',
+            informe:         '📋 Informe',
+            receta_externa:  '💊 Receta externa',
+            epicrisis:       '🏥 Epicrisis',
+            consentimiento:  '✍️ Consentimiento',
+            otro:            '📄 Otro'
+        };
+
+        docs.forEach(doc => {
+            const esPDF   = doc.tipo_archivo === 'application/pdf';
+            const fecha   = new Date(doc.created_at).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' });
+            const tamKB   = doc.tamanio_bytes ? (doc.tamanio_bytes / 1024).toFixed(0) + ' KB' : '—';
+
+            const thumbHTML = esPDF
+                ? `<div class="doc-thumb-pdf"><i class="bi bi-file-earmark-pdf-fill"></i></div>`
+                : `<img src="${doc.url_publica}" class="doc-thumb" alt="${doc.nombre_archivo}" loading="lazy">`;
+
+            lista.insertAdjacentHTML('beforeend', `
+            <div class="col-sm-6 col-md-4">
+                <div class="card doc-card h-100 shadow-sm">
+                    <div style="padding:8px 8px 0;">
+                        ${thumbHTML}
+                    </div>
+                    <div class="card-body p-2">
+                        <span class="badge bg-info text-dark badge-tipo mb-1">${tipoLabel[doc.tipo_documento] || doc.tipo_documento}</span>
+                        <p class="mb-0 fw-bold small text-truncate" title="${doc.nombre_archivo}">${doc.nombre_archivo}</p>
+                        <p class="mb-0 small text-muted text-truncate">👤 ${doc.nombre_paciente}</p>
+                        <p class="mb-0 small text-muted">RUT: ${doc.rut_paciente}</p>
+                        ${doc.descripcion ? `<p class="mb-0 small text-muted text-truncate" title="${doc.descripcion}">📝 ${doc.descripcion}</p>` : ''}
+                        <p class="mb-0 small text-muted">${fecha} · ${tamKB}</p>
+                    </div>
+                    <div class="card-footer p-2 d-flex gap-1">
+                        <button class="btn btn-sm btn-outline-primary flex-fill"
+                            onclick="verDocumento('${doc.url_publica}', '${doc.nombre_archivo}', '${doc.tipo_archivo}')">
+                            <i class="bi bi-eye"></i> Ver
+                        </button>
+                        <a href="${doc.url_publica}" download="${doc.nombre_archivo}" target="_blank"
+                            class="btn btn-sm btn-outline-success flex-fill">
+                            <i class="bi bi-download"></i>
+                        </a>
+                        <button class="btn btn-sm btn-outline-danger"
+                            onclick="prepararEliminar('${doc.documento_id}', '${doc.storage_path}', '${doc.nombre_archivo}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>`);
+        });
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  VER DOCUMENTO EN MODAL
+    // ════════════════════════════════════════════════════════════
+    function verDocumento(url, nombre, tipo) {
+        document.getElementById('modal-titulo').textContent = nombre;
+        document.getElementById('modal-descargar').href = url;
+        document.getElementById('modal-descargar').download = nombre;
+
+        const contenido = document.getElementById('modal-contenido');
+        if (tipo === 'application/pdf') {
+            contenido.innerHTML = `<iframe src="${url}" style="width:100%;height:500px;border:none;"></iframe>`;
+        } else {
+            contenido.innerHTML = `<img src="${url}" class="img-fluid" style="max-height:500px;" alt="${nombre}">`;
+        }
+
+        new bootstrap.Modal(document.getElementById('modalDoc')).show();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  ELIMINAR DOCUMENTO
+    // ════════════════════════════════════════════════════════════
+    function prepararEliminar(docId, storagePath, nombreArchivo) {
+        _docAEliminar = { id: docId, storagePath, nombreArchivo };
+        document.getElementById('nombre-doc-eliminar').textContent = nombreArchivo;
+        new bootstrap.Modal(document.getElementById('modalEliminar')).show();
+    }
+
+    async function eliminarDocumento() {
+        if (!_docAEliminar) return;
+
+        const btn = document.getElementById('btn-confirmar-eliminar');
+        btn.disabled    = true;
+        btn.textContent = 'Eliminando...';
+
+        // 1. Eliminar del Storage
+        await _supabase.storage
+            .from('documentos-medicos')
+            .remove([_docAEliminar.storagePath]);
+
+        // 2. Eliminar de la tabla
+        await _supabase
+            .from('documentos_medicos')
+            .delete()
+            .eq('documento_id', _docAEliminar.id);
+
+        bootstrap.Modal.getInstance(document.getElementById('modalEliminar')).hide();
+        btn.disabled    = false;
+        btn.textContent = 'Eliminar';
+        _docAEliminar   = null;
+
+        await cargarDocumentos();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  HELPERS
+    // ════════════════════════════════════════════════════════════
+    function limpiarFormulario() {
+        quitarArchivo();
+        document.getElementById('rut-busqueda').value     = '';
+        document.getElementById('tipo-documento').value   = '';
+        document.getElementById('descripcion-doc').value  = '';
+        document.getElementById('nombre-manual').value    = '';
+        document.getElementById('campo-nombre-manual').style.display = 'none';
+        document.getElementById('info-paciente-encontrado').classList.add('d-none');
+        document.getElementById('info-paciente-no-encontrado').classList.add('d-none');
+        _pacienteEncontrado = null;
+        actualizarBotonSubir();
+    }
+
+    function mostrarMsgUpload(texto, tipo) {
+        const el = document.getElementById('msg-upload');
+        el.innerHTML  = `<div class="alert alert-${tipo} py-2">${texto}</div>`;
+        el.classList.remove('d-none');
+    }
+    function ocultarMsgUpload() {
+        const el = document.getElementById('msg-upload');
+        el.classList.add('d-none');
+        el.innerHTML = '';
+    }
+
+    function logoutUser(e) {
+        e.preventDefault();
+        if (confirm('¿Desea cerrar sesión?')) {
+            auth.logout();
+            window.location.href = 'login.html';
+        }
+    }
+    </script>
+</body>
+</html>
