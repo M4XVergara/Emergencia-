@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/png" href="images/favicon_clinica.png">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- QRCode.js para generar el QR en el navegador -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
@@ -165,8 +167,13 @@
             const nombre     = params.get('nombre');
 
             if (!patient_id) {
-                alert('Paciente no especificado. Vuelve a la lista.');
-                window.location.href = 'pacientes.html';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'warning', title: 'Paciente no especificado', text: 'Vuelve a la lista.', confirmButtonText: 'Aceptar' })
+                        .then(() => { window.location.href = 'pacientes.html'; });
+                } else {
+                    alert('Paciente no especificado. Vuelve a la lista.');
+                    window.location.href = 'pacientes.html';
+                }
                 return;
             }
 
@@ -184,7 +191,11 @@
                 const indicaciones = document.getElementById('indicaciones').value.trim();
 
                 if (!medicamento || !dosis || !frecuencia || !duracion) {
-                    alert('Por favor completa todos los campos obligatorios.');
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'warning', title: 'Campos incompletos', text: 'Por favor completa todos los campos obligatorios.', confirmButtonText: 'Aceptar' });
+                    } else {
+                        alert('Por favor completa todos los campos obligatorios.');
+                    }
                     return;
                 }
 
@@ -220,7 +231,11 @@
                     .single();
 
                 if (error) {
-                    alert('Error al guardar la receta: ' + error.message);
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({ icon: 'error', title: 'Error', text: 'Error al guardar la receta: ' + error.message, confirmButtonText: 'Aceptar' });
+                    } else {
+                        alert('Error al guardar la receta: ' + error.message);
+                    }
                     btn.disabled = false;
                     btn.textContent = '💊 Emitir Receta y Generar QR';
                     return;
@@ -258,9 +273,14 @@
 
         function logoutUser(e) {
             e.preventDefault();
-            if (confirm('¿Desea cerrar sesión?')) {
-                auth.logout();
-                window.location.href = 'login.html';
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'question', title: 'Cerrar sesión', text: '¿Desea cerrar sesión?', showCancelButton: true, confirmButtonText: 'Sí', cancelButtonText: 'Cancelar' })
+                    .then(res => { if (res.isConfirmed) { auth.logout(); window.location.href = 'login.html'; } });
+            } else {
+                if (confirm('¿Desea cerrar sesión?')) {
+                    auth.logout();
+                    window.location.href = 'login.html';
+                }
             }
         }
     </script>

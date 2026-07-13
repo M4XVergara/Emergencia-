@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/png" href="images/favicon_clinica.png">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .rol-badge-admin        { background: #534AB7; color: #fff; }
         .rol-badge-medico       { background: #0F6E56; color: #fff; }
@@ -300,20 +302,25 @@
         // ── ACTIVAR / DESACTIVAR ──────────────────────────────────
         async function toggleActivo(id, estadoActual) {
             const accion = estadoActual ? 'desactivar' : 'activar';
-            if (!confirm(`¿Deseas ${accion} este usuario?`)) return;
+                    if (typeof Swal !== 'undefined') {
+                        const res = await Swal.fire({ icon: 'question', title: 'Confirmar', text: `¿Deseas ${accion} este usuario?`, showCancelButton: true, confirmButtonText: 'Sí', cancelButtonText: 'Cancelar' });
+                        if (!res.isConfirmed) return;
+                    } else {
+                        if (!confirm(`¿Deseas ${accion} este usuario?`)) return;
+                    }
 
-            const { error } = await _supabase
-                .from('usuarios')
-                .update({ activo: !estadoActual })
-                .eq('id', id);
+                    const { error } = await _supabase
+                        .from('usuarios')
+                        .update({ activo: !estadoActual })
+                        .eq('id', id);
 
-            if (error) {
-                mostrarMensaje('Error al actualizar: ' + error.message, 'alert-danger');
-            } else {
-                mostrarMensaje(`Usuario ${estadoActual ? 'desactivado' : 'activado'} correctamente.`, 'alert-success');
-                await cargarUsuarios();
-            }
-        }
+                    if (error) {
+                        mostrarMensaje('Error al actualizar: ' + error.message, 'alert-danger');
+                    } else {
+                        mostrarMensaje(`Usuario ${estadoActual ? 'desactivado' : 'activado'} correctamente.`, 'alert-success');
+                        await cargarUsuarios();
+                    }
+                }
 
         // ── MENSAJE TEMPORAL ──────────────────────────────────────
         function mostrarMensaje(texto, clase) {
@@ -327,9 +334,14 @@
 
         function logoutUser(e) {
             e.preventDefault();
-            if (confirm('¿Desea cerrar sesión?')) {
-                auth.logout();
-                window.location.href = 'login.html';
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'question', title: 'Cerrar sesión', text: '¿Desea cerrar sesión?', showCancelButton: true, confirmButtonText: 'Sí', cancelButtonText: 'Cancelar' })
+                    .then(res => { if (res.isConfirmed) { auth.logout(); window.location.href = 'login.html'; } });
+            } else {
+                if (confirm('¿Desea cerrar sesión?')) {
+                    auth.logout();
+                    window.location.href = 'login.html';
+                }
             }
         }
     </script>

@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/png" href="images/favicon_clinica.png">
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .portal-card { max-width: 680px; margin: auto; }
         .seccion-header { background: #e7f3ff; border-left: 4px solid #0d6efd; padding: 10px 16px; border-radius: 4px; margin-bottom: 1rem; }
@@ -295,9 +297,14 @@
 
         function logoutUser(e) {
             e.preventDefault();
-            if (confirm('¿Deseas cerrar sesión?')) {
-                auth.logout();
-                window.location.href = 'index.html';
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'question', title: 'Cerrar sesión', text: '¿Deseas cerrar sesión?', showCancelButton: true, confirmButtonText: 'Sí', cancelButtonText: 'Cancelar' })
+                    .then(res => { if (res.isConfirmed) { auth.logout(); window.location.href = 'index.html'; } });
+            } else {
+                if (confirm('¿Deseas cerrar sesión?')) {
+                    auth.logout();
+                    window.location.href = 'index.html';
+                }
             }
         }
     </script>

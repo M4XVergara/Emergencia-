@@ -13,7 +13,6 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
         }
         .login-container {
             background: white;
@@ -38,13 +37,13 @@
             <h1>🏥 Clínica Bienestar</h1>
             <p>Acceso para personal y pacientes</p>
         </div>
-
+        <link rel="icon" type="image/png" href="images/favicon_clinica.png">
         <div class="alert alert-danger d-none" id="error-message"></div>
         <div class="alert alert-success d-none" id="success-message"></div>
 
         <form id="loginForm">
             <div class="mb-3">
-                <label for="username" class="form-label">Usuario o RUT</label>
+                <label for="username" class="form-label">RUT</label>
                 <input type="text" class="form-control" id="username" placeholder="Usuario o 12.345.678-9" required>
                 <div class="form-text">Si eres paciente, ingresa tu RUT como usuario.</div>
             </div>
@@ -68,6 +67,8 @@
     <!-- SDK Supabase ANTES de supabase.js -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
+    <!-- SweetAlert2: alertas mejoradas -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="js/auth.js"></script>
     <script>
         // Si ya está autenticado, redirigir según el rol
@@ -76,11 +77,16 @@
             window.location.href = roleRedirect;
         }
 
+        // Mostrar mensaje de registro exitoso con SweetAlert2 si existe
         const registrationSuccess = sessionStorage.getItem('registrationSuccess');
         if (registrationSuccess) {
-            const successMsg = document.getElementById('success-message');
-            successMsg.textContent = registrationSuccess;
-            successMsg.classList.remove('d-none');
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'success', title: 'Registro completado', text: registrationSuccess, confirmButtonText: 'Aceptar' });
+            } else {
+                const successMsg = document.getElementById('success-message');
+                successMsg.textContent = registrationSuccess;
+                successMsg.classList.remove('d-none');
+            }
             sessionStorage.removeItem('registrationSuccess');
         }
 
@@ -99,32 +105,34 @@
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const username   = document.getElementById('username').value.trim();
-            const password   = document.getElementById('password').value;
-            const errorMsg   = document.getElementById('error-message');
-            const successMsg = document.getElementById('success-message');
-            const btn        = document.getElementById('btnLogin');
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('btnLogin');
 
-            errorMsg.classList.add('d-none');
-            successMsg.classList.add('d-none');
-            btn.disabled    = true;
+            btn.disabled = true;
             btn.textContent = 'Verificando...';
 
             const result = await auth.login(username, password);
 
             if (result.success) {
-                successMsg.textContent = `✓ Bienvenido. Redirigiendo...`;
-                successMsg.classList.remove('d-none');
-                const roleRedirect = result.rol === 'cliente'
-                    ? 'portal-paciente.html'
-                    : 'registro.html';
-                setTimeout(() => { window.location.href = roleRedirect; }, 1200);
+                const roleRedirect = result.rol === 'cliente' ? 'portal-paciente.html' : 'registro.html';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'success', title: 'Bienvenido', text: 'Redirigiendo...', timer: 1200, showConfirmButton: false });
+                    setTimeout(() => { window.location.href = roleRedirect; }, 1200);
+                } else {
+                    window.location.href = roleRedirect;
+                }
             } else {
-                errorMsg.textContent = `✗ ${result.message}`;
-                errorMsg.classList.remove('d-none');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'error', title: 'Error', text: result.message, confirmButtonText: 'Aceptar' });
+                } else {
+                    const errorMsg = document.getElementById('error-message');
+                    errorMsg.textContent = `✗ ${result.message}`;
+                    errorMsg.classList.remove('d-none');
+                }
                 document.getElementById('password').value = '';
                 document.getElementById('password').focus();
-                btn.disabled    = false;
+                btn.disabled = false;
                 btn.textContent = 'Iniciar Sesión';
             }
         });

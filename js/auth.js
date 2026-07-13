@@ -131,8 +131,13 @@ class Auth {
         this.protectPage();
         const rol = this.getRol();
         if (!roles.includes(rol)) {
-            alert('No tienes permiso para acceder a esta página.');
-            window.location.href = 'registro.html';
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'warning', title: 'Acceso denegado', text: 'No tienes permiso para acceder a esta página.', confirmButtonText: 'Aceptar' })
+                    .then(() => { window.location.href = 'registro.html'; });
+            } else {
+                alert('No tienes permiso para acceder a esta página.');
+                window.location.href = 'registro.html';
+            }
         }
     }
 

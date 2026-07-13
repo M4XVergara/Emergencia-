@@ -156,32 +156,32 @@ function patientToDbRow(p) {
 }
 
 function dbRowToPatient(fila) {
-    // Reconstruye el objeto con la misma estructura que espera la app
-    return {
-        id:              fila.patient_id,
-        nombre:          fila.nombre,
-        apellidoPaterno: fila.apellido_paterno,
-        apellidoMaterno: fila.apellido_materno,
-        rut:             fila.rut,
-        edad:            fila.edad,
-        sexo:            fila.sexo,
-        signosVitales: {
-            temperatura: fila.temperatura,
-            presion: {
-                sistolica:  fila.presion_sistolica,
-                diastolica: fila.presion_diastolica
-            },
-            pulsaciones: fila.pulsaciones,
-            spo2:        fila.spo2
-        },
-        informacionClinica: {
-            nivelDolor:   fila.nivel_dolor,
-            alergias:     fila.alergias,
-            medicamentos: fila.medicamentos
-        },
-        diagnostico:    fila.diagnostico,
-        sintomas:       fila.sintomas || [],
-        urgencia:       fila.urgencia,
-        fechaRegistro:  fila.fecha_registro
-    };
+    // Reconstruye una instancia de Patient para que los métodos (detectarSintomasAutomaticos, clasificarUrgencia, etc.) estén disponibles.
+    // Nota: Patient se define en js/patient.js y debe estar cargado antes de invocar db.getPacientes().
+    const sintomas = fila.sintomas || [];
+    const paciente = new Patient(
+        fila.nombre,
+        fila.apellido_paterno,
+        fila.apellido_materno,
+        fila.rut,
+        fila.edad,
+        fila.sexo,
+        fila.temperatura,
+        fila.presion_sistolica,
+        fila.presion_diastolica,
+        fila.pulsaciones,
+        fila.spo2,
+        fila.nivel_dolor,
+        fila.alergias,
+        fila.medicamentos,
+        sintomas,
+        fila.diagnostico || ''
+    );
+
+    // Restaurar identificador y fecha guardados en la base de datos (el constructor genera un id nuevo y fechaRegistro)
+    paciente.id = fila.patient_id;
+    paciente.fechaRegistro = fila.fecha_registro;
+    // Preferir la urgencia almacenada si existe; si no, recalcularla
+    paciente.urgencia = fila.urgencia || paciente.clasificarUrgencia();
+    return paciente;
 }

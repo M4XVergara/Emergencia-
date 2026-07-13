@@ -235,7 +235,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Se revisa si hay un mensaje de éxito para mostrarlo.
         const newMessage = sessionStorage.getItem('newMessage');
         if (newMessage) {
-            alert(newMessage); // Muestra el mensaje de éxito en una ventana emergente.
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'success', title: '¡Éxito!', text: newMessage, timer: 2000, showConfirmButton: false });
+            } else {
+                alert(newMessage); // Muestra el mensaje de éxito en una ventana emergente.
+            }
             sessionStorage.removeItem('newMessage');
         }
 
@@ -243,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.displayPatients(getPatients());
 
         // Se usa delegación de eventos para manejar los clics en los botones de "Editar" y "Eliminar".
-        document.getElementById('lista-pacientes').addEventListener('click', (event) => {
+        document.getElementById('lista-pacientes').addEventListener('click', async (event) => {
             // Lógica para el botón Editar
             if (event.target.classList.contains('btn-edit')) {
                 event.preventDefault();
@@ -254,7 +258,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Lógica para el botón Eliminar
             if (event.target.classList.contains('btn-delete')) {
-                if (confirm('¿Estás seguro de que deseas eliminar a este paciente?')) {
+                let confirmed = false;
+                if (typeof Swal !== 'undefined') {
+                    const res = await Swal.fire({ icon: 'warning', title: 'Confirmar eliminación', text: '¿Estás seguro de que deseas eliminar a este paciente?', showCancelButton: true, confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar' });
+                    confirmed = res.isConfirmed;
+                } else {
+                    confirmed = confirm('¿Estás seguro de que deseas eliminar a este paciente?');
+                }
+                if (confirmed) {
                     const patientId = event.target.dataset.id;
                     let patients = getPatients();
                     patients = patients.filter(p => p.id != patientId);
