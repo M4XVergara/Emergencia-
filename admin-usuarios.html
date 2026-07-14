@@ -51,8 +51,8 @@
 
         <div id="mensaje-pagina"></div>
 
-        <!-- Tabla de usuarios -->
-        <div class="card shadow-sm">
+        <!-- Tabla de usuarios (Desktop) -->
+        <div class="card shadow-sm hide-mobile">
             <div class="card-body p-0">
                 <div id="tabla-loading" class="text-center py-4">
                     <div class="spinner-border text-primary"></div>
@@ -71,6 +71,17 @@
                     </thead>
                     <tbody id="tbody-usuarios"></tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- Lista de usuarios (Móvil) -->
+        <div class="show-mobile">
+            <div id="tabla-loading-mobile" class="text-center py-4">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-2 text-muted">Cargando usuarios...</p>
+            </div>
+            <div id="lista-usuarios-mobile" class="d-none">
+                <!-- Las tarjetas se generan con JavaScript -->
             </div>
         </div>
     </main>
@@ -160,7 +171,9 @@
                 .order('created_at', { ascending: true });
 
             document.getElementById('tabla-loading').classList.add('d-none');
+            document.getElementById('tabla-loading-mobile').classList.add('d-none');
             document.getElementById('tabla-usuarios').classList.remove('d-none');
+            document.getElementById('lista-usuarios-mobile').classList.remove('d-none');
 
             if (error || !data) {
                 mostrarMensaje('Error al cargar usuarios: ' + (error?.message || ''), 'alert-danger');
@@ -169,9 +182,12 @@
 
             const rolLabel = { admin: 'Administrador', medico: 'Médico', recepcionista: 'Recepcionista' };
             const tbody = document.getElementById('tbody-usuarios');
+            const listaMovil = document.getElementById('lista-usuarios-mobile');
             tbody.innerHTML = '';
+            listaMovil.innerHTML = '';
 
             data.forEach(u => {
+                // Versión Desktop - Tabla
                 const fila = document.createElement('tr');
                 fila.className = 'user-row';
                 fila.innerHTML = `
@@ -201,6 +217,40 @@
                         </button>
                     </td>`;
                 tbody.appendChild(fila);
+
+                // Versión Móvil - Tarjetas
+                const card = document.createElement('div');
+                card.className = 'card mb-3 shadow-sm';
+                card.innerHTML = `
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h5 class="card-title mb-0">${u.nombre} ${u.apellido}</h5>
+                                <p class="text-muted mb-0" style="font-size: 0.9rem;">@${u.username}</p>
+                            </div>
+                            <span class="badge rol-badge-${u.rol}">
+                                ${rolLabel[u.rol] || u.rol}
+                            </span>
+                        </div>
+                        <p class="mb-1"><strong>Email:</strong> ${u.email}</p>
+                        <p class="mb-3">
+                            <span class="badge ${u.activo ? 'bg-success' : 'bg-secondary'}">
+                                ${u.activo ? 'Activo' : 'Inactivo'}
+                            </span>
+                        </p>
+                        <div class="btn-group-mobile">
+                            <button class="btn btn-sm btn-outline-primary"
+                                onclick="abrirModalEditar(${u.id})">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                            <button class="btn btn-sm ${u.activo ? 'btn-outline-warning' : 'btn-outline-success'}"
+                                onclick="toggleActivo(${u.id}, ${u.activo})">
+                                ${u.activo ? '<i class="bi bi-pause-circle"></i> Desactivar' : '<i class="bi bi-play-circle"></i> Activar'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+                listaMovil.appendChild(card);
             });
         }
 

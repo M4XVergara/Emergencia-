@@ -152,3 +152,342 @@ body { /* --- IMAGEN DE FONDO SITIOS WEB --- */
     box-shadow: 0 0 5px red;
 }
 /* Estilo para el botón de registrar paciente */
+
+/* Pantallas pequeñas (móvil: < 576px) */
+@media (max-width: 575.98px) {
+    body {
+        background-attachment: fixed;
+    }
+    
+    main {
+        min-height: calc(100vh - 100px);
+        padding: 0.5rem;
+    }
+    
+    h1, h2, h3 {
+        font-size: 1.5rem !important;
+    }
+    
+    .navbar {
+        padding: 0.5rem 0 !important;
+    }
+    
+    .navbar-brand {
+        font-size: 1rem !important;
+    }
+    
+    .navbar-logo {
+        height: 30px;
+    }
+    
+    .nav-link {
+        font-size: 0.9rem !important;
+    }
+    
+    .container {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+    
+    #registroForm {
+        padding: 1.25rem !important;
+        margin: 0 auto;
+        max-width: 100%;
+    }
+    
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    .card-body {
+        padding: 1rem !important;
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1.5rem !important;
+        font-size: 1rem !important;
+    }
+    
+    .form-control, .form-select {
+        font-size: 16px !important; /* Evita zoom en input en iOS */
+        padding: 0.5rem !important;
+    }
+    
+    .row > [class*="col-"] {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+    
+    .hero-section {
+        height: 40vh;
+    }
+    
+    .hero-section .container h1 {
+        font-size: 1.75rem !important;
+    }
+    
+    .hero-section .container p {
+        font-size: 0.9rem;
+    }
+    
+    .info-card {
+        padding: 1.5rem !important;
+        margin-bottom: 1rem;
+    }
+    
+    .info-card i {
+        font-size: 2rem;
+    }
+    
+    .login-container {
+        padding: 20px !important;
+        max-width: 100% !important;
+        margin: 10px;
+        border-radius: 8px;
+    }
+    
+    .login-header h1 {
+        font-size: 22px !important;
+    }
+    
+    .login-header p {
+        font-size: 12px;
+    }
+    
+    .form-label {
+        font-size: 0.85rem !important;
+    }
+    
+    .form-text {
+        font-size: 0.75rem !important;
+    }
+    
+    /* Ocultar elementos innecesarios en móvil */
+    .hide-mobile {
+        display: none !important;
+    }
+    
+    /* Mostrar versión simplificada en móvil */
+    .show-mobile {
+        display: block !important;
+    }
+    
+    /* Tablas en móvil - hidden */
+    .table-responsive-mobile {
+        display: none !important;
+    }
+    
+    /* Versión simplificada de usuarios/documentos en móvil */
+    .card-list-mobile {
+        display: block !important;
+    }
+    
+    /* Filtros más compactos */
+    .filtro-btn {
+        min-width: auto !important;
+        padding: 0.4rem 0.6rem !important;
+        font-size: 0.8rem !important;
+    }
+    
+    /* Tarjetas de pacientes más compactas */
+    .card-patient {
+        font-size: 0.9rem;
+    }
+    
+    .card-patient .card-title {
+        font-size: 1rem !important;
+    }
+    
+    .card-patient .card-text {
+        font-size: 0.8rem !important;
+        margin-bottom: 0.3rem !important;
+    }
+    
+    /* Botones más pequeños en tarjetas */
+    .card .btn-sm {
+        padding: 0.3rem 0.5rem !important;
+        font-size: 0.75rem !important;
+    }
+    
+    /* Badge más compactos */
+    .badge {
+        padding: 0.35rem 0.6rem !important;
+        font-size: 0.75rem !important;
+    }
+    
+    /* Modal ajustado */
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+    
+    .modal-body {
+        padding: 1rem !important;
+    }
+    
+    /* Spinner y carga */
+    .spinner-border {
+        width: 2rem;
+        height: 2rem;
+        border-width: 0.2em;
+    }
+    
+    /* Tabla en móvil */
+    .table {
+        font-size: 0.8rem !important;
+    }
+    
+    .table th, .table td {
+        padding: 0.5rem !important;
+    }
+    
+    /* Textarea en móvil */
+    textarea.form-control {
+        min-height: 80px !important;
+    }
+    
+    /* Ocultar columnas innecesarias en tabla móvil */
+    .col-hide-mobile {
+        display: none !important;
+    }
+    
+    /* Flex para botones en móvil */
+    .btn-group-mobile {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .btn-group-mobile .btn {
+        width: 100%;
+    }
+    
+    /* Grid simplificado */
+    .col-md-6 {
+        flex-basis: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .col-md-4 {
+        flex-basis: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .col-md-3 {
+        flex-basis: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .col-lg-5 {
+        flex-basis: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .col-lg-7 {
+        flex-basis: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Espaciado horizontal reducido */
+    .px-md-3 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    
+    /* Admin documentos - ajuste en móvil */
+    #drop-zone {
+        padding: 20px 10px !important;
+    }
+    
+    #drop-zone i {
+        font-size: 2rem !important;
+    }
+    
+    /* Preview box más pequeño en móvil */
+    #preview-box {
+        max-height: 200px !important;
+    }
+    
+    #preview-box img {
+        max-height: 200px !important;
+    }
+    
+    #preview-box iframe {
+        height: 200px !important;
+    }
+    
+    /* Grid de documentos */
+    #lista-docs {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 1rem;
+    }
+    
+    /* Documentos más legibles en móvil */
+    .doc-thumb {
+        height: 120px !important;
+    }
+    
+    .doc-thumb-pdf {
+        height: 120px !important;
+    }
+}
+
+/* Pantallas medianas (tablet: 576px - 768px) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+    main {
+        min-height: calc(100vh - 120px);
+    }
+    
+    .hero-section {
+        height: 50vh;
+    }
+    
+    #registroForm {
+        padding: 2rem !important;
+    }
+    
+    .card-body {
+        padding: 1.5rem !important;
+    }
+    
+    .login-container {
+        max-width: 100%;
+        padding: 30px !important;
+    }
+    
+    .hide-tablet {
+        display: none !important;
+    }
+    
+    /* Simplificar algunas vistas en tablet */
+    .col-md-4 {
+        flex-basis: 50% !important;
+        max-width: 50% !important;
+    }
+    
+    /* Mostrar tablas simplificadas en tablet */
+    .table-responsive-tablet {
+        font-size: 0.9rem;
+    }
+}
+
+/* Pantallas grandes (desktop: >= 768px) - estilos por defecto aplican */
+@media (min-width: 768px) {
+    .show-mobile {
+        display: none !important;
+    }
+    
+    .card-list-mobile {
+        display: none !important;
+    }
+    
+    .table-responsive-mobile {
+        display: table !important;
+    }
+}
