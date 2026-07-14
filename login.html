@@ -109,9 +109,14 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="js/auth.js"></script>
     <script>
-        // Si ya está autenticado, redirigir según el rol
+        const loginParams = new URLSearchParams(window.location.search);
+        const redirectAfterLogin = loginParams.get('redirect');
+
+        // Si ya está autenticado, redirigir según el rol y preferencia de destino
         if (auth.isAuthenticated()) {
-            const roleRedirect = auth.getRol() === 'cliente' ? 'portal-paciente.html' : 'registro.html';
+            const roleRedirect = auth.getRol() === 'cliente'
+                ? (redirectAfterLogin || 'portal-paciente.html')
+                : 'registro.html';
             window.location.href = roleRedirect;
         }
 
@@ -151,9 +156,11 @@
             btn.textContent = 'Verificando...';
 
             const result = await auth.login(username, password);
-
+ 
             if (result.success) {
-                const roleRedirect = result.rol === 'cliente' ? 'portal-paciente.html' : 'registro.html';
+                const roleRedirect = result.rol === 'cliente'
+                    ? (redirectAfterLogin || 'portal-paciente.html')
+                    : 'registro.html';
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({ icon: 'success', title: 'Bienvenido', text: 'Redirigiendo...', timer: 1200, showConfirmButton: false });
                     setTimeout(() => { window.location.href = roleRedirect; }, 1200);

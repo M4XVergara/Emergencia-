@@ -95,7 +95,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const solicitarHoraLink = document.querySelector('a[href="solicitar-hora.html"]');
             if (solicitarHoraLink && (!auth.isAuthenticated() || auth.getRol() !== 'cliente')) {
-                solicitarHoraLink.href = 'login.html';
+                solicitarHoraLink.href = 'login.html?redirect=solicitar-hora.html';
             }
         });
     </script>
