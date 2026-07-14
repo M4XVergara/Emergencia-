@@ -19,6 +19,9 @@
         .qr-mini canvas, .qr-mini img { width: 80px !important; height: 80px !important; }
         .estado-badge { font-size: 0.8rem; }
         .triage-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+        .paciente-nombre { color: #198754; font-size: 1.8rem; font-weight: 700; letter-spacing: -0.02em; }
+        .paciente-rut { color: #198754; font-weight: 600; }
+        .no-data-message { color: #0f5132; background: #d1e7dd; border: 1px solid #badbcc; border-radius: 0.75rem; padding: 1rem 1.25rem; margin: 0.5rem 0; }
     </style>
 </head>
 <body>
@@ -71,12 +74,11 @@
             <div id="paso-resultado" class="d-none">
 
                 <!-- Encabezado paciente -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="mb-4">
                     <div>
-                        <h3 id="res-nombre" class="mb-0"></h3>
-                        <span class="text-muted">RUT: <span id="res-rut"></span></span>
+                        <h3 id="res-nombre" class="mb-0 paciente-nombre"></h3>
+                        <span class="paciente-rut">RUT: <span id="res-rut"></span></span>
                     </div>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="volver()">← Consultar otro RUT</button>
                 </div>
 
                 <!-- Mis atenciones -->
@@ -84,7 +86,7 @@
                     <h5 class="mb-0">🏥 Mis Atenciones (<span id="cnt-atenciones">0</span>)</h5>
                 </div>
                 <div id="lista-atenciones">
-                    <div class="text-center py-3 text-muted">No hay atenciones registradas.</div>
+                   <div class="text-center py-3 no-data-message">Sin atenciones previas.</div>
                 </div>
 
                 <!-- Mis recetas -->
@@ -92,7 +94,7 @@
                     <h5 class="mb-0">💊 Mis Recetas (<span id="cnt-recetas">0</span>)</h5>
                 </div>
                 <div id="lista-recetas">
-                    <div class="text-center py-3 text-muted">No hay recetas emitidas.</div>
+                    <div class="text-center py-3 no-data-message">Sin recetas previas.</div>
                 </div>
 
                 <!-- Estado de solicitudes -->
@@ -100,7 +102,7 @@
                     <h5 class="mb-0">📅 Estado de Solicitudes de Hora (<span id="cnt-solicitudes">0</span>)</h5>
                 </div>
                 <div id="lista-solicitudes">
-                    <div class="text-center py-3 text-muted">No hay solicitudes registradas.</div>
+                    <div class="text-center py-3 no-data-message">Sin solicitudes registradas.</div>
                 </div>
 
             </div>
@@ -203,7 +205,7 @@
                 document.getElementById('cnt-atenciones').textContent = pacientes.length;
                 const listaAt = document.getElementById('lista-atenciones');
                 if (pacientes.length === 0) {
-                    listaAt.innerHTML = '<div class="text-center py-3 text-muted">Sin atenciones previas.</div>';
+                    listaAt.innerHTML = '<div class="text-center py-3 no-data-message">Sin atenciones previas.</div>';
                 } else {
                     const triageColor = { 'Roja': '#dc3545', 'Amarillo': '#ffc107', 'Verde': '#198754' };
                     listaAt.innerHTML = pacientes.map(p => `
@@ -227,7 +229,7 @@
                 document.getElementById('cnt-recetas').textContent = recetas.length;
                 const listaRec = document.getElementById('lista-recetas');
                 if (recetas.length === 0) {
-                    listaRec.innerHTML = '<div class="text-center py-3 text-muted">Sin recetas emitidas.</div>';
+                    listaRec.innerHTML = '<div class="text-center py-3 no-data-message">Sin recetas previas.</div>';
                 } else {
                     listaRec.innerHTML = recetas.map((r, i) => `
                         <div class="receta-item d-flex justify-content-between align-items-start">
@@ -262,7 +264,7 @@
                 document.getElementById('cnt-solicitudes').textContent = solicitudes.length;
                 const listaSol = document.getElementById('lista-solicitudes');
                 if (solicitudes.length === 0) {
-                    listaSol.innerHTML = '<div class="text-center py-3 text-muted">Sin solicitudes registradas.</div>';
+                    listaSol.innerHTML = '<div class="text-center py-3 no-data-message">Sin solicitudes registradas.</div>';
                 } else {
                     const estadoColor = { pendiente: 'warning', confirmada: 'success', atendida: 'secondary' };
                     const estadoIcon  = { pendiente: '⏳', confirmada: '✅', atendida: '🏁' };
@@ -291,13 +293,7 @@
                 errEl.classList.remove('d-none');
             }
         }
-
-        function volver() {
-            document.getElementById('paso-resultado').classList.add('d-none');
-            document.getElementById('paso-rut').classList.remove('d-none');
-            document.getElementById('rutInput').value = '';
-        }
-
+ 
         function logoutUser(e) {
             e.preventDefault();
             if (typeof Swal !== 'undefined') {
