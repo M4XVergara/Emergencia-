@@ -491,3 +491,110 @@ body { /* --- IMAGEN DE FONDO SITIOS WEB --- */
         display: table !important;
     }
 }
+/* ==========================================================================
+   --- MEJORAS VISUALES Y RESPONSIVAS: PORTAL PACIENTE Y LEGIBILIDAD ---
+   ========================================================================== */
+
+/* --- TARJETAS DEL PORTAL DEL PACIENTE (Se ven blancas y legibles siempre) --- */
+.receta-item {
+    border: 1px solid #dee2e6;
+    border-radius: 12px; /* Un poco más curvo acorde al diseño moderno */
+    padding: 20px;
+    margin-bottom: 16px;
+    background-color: #ffffff !important; /* Fondo blanco sólido para garantizar legibilidad */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); /* Sombra suave para darle volumen */
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    opacity: 1 !important; /* Evita cualquier transparencia heredada */
+}
+
+/* --- EFECTO AL PASAR EL CURSOR (HOVER ELEGANTE) --- */
+.receta-item:hover {
+    background-color: #fcfdfe !important; /* Un sutil cambio a blanco brillante */
+    border-color: #0d6efd; /* El borde adopta el azul corporativo de la clínica */
+    transform: translateY(-4px); /* Efecto de elevación sutil */
+    box-shadow: 0 8px 16px rgba(13, 110, 253, 0.12); /* Sombra más definida y azulada */
+    cursor: pointer;
+}
+
+/* --- OPTIMIZACIONES DE TEXTO Y CONTRASTE EN PANTALLAS DE TODO TAMAÑO --- */
+.receta-item strong {
+    color: #0b5ed7; /* Destacar títulos de atenciones o medicamentos */
+    font-size: 1.05rem;
+}
+
+.receta-item .text-muted {
+    color: #495057 !important; /* Oscurecer un poco el texto secundario para cumplir normas de accesibilidad */
+}
+
+/* --- REGLAS RESPONSIVAS ADICIONALES PARA LA SECCIÓN DE RECETAS EN MÓVIL (< 576px) --- */
+@media (max-width: 575.98px) {
+    .receta-item {
+        padding: 15px; /* Reducir padding interno para ganar pantalla */
+        margin-bottom: 12px;
+        border-radius: 8px;
+    }
+    
+    .receta-item .d-flex {
+        flex-direction: column !important; /* Pasar de fila a columna en móviles */
+        gap: 10px;
+    }
+    
+    /* Centrar la visualización de los códigos QR en teléfonos */
+    .qr-mini {
+        align-self: center;
+        margin-top: 10px;
+        margin-left: 0 !important;
+    }
+}
+
+/* ==========================================================================
+   --- MEJORA DE CONTRASTE Y LEGIBILIDAD EN LA RECETA VERIFICADA (ver-receta.html) ---
+   ========================================================================== */
+
+/* --- CONTENEDOR PRINCIPAL DE LA RECETA --- */
+.receta-card {
+    background-color: #ffffff !important; /* Forzamos un fondo blanco sólido */
+    border: 2px solid #0d6efd !important;  /* Borde azul corporativo para darle estructura */
+    border-radius: 12px !important;       /* Bordes redondeados modernos */
+    padding: 30px !important;             /* Espaciado interno generoso */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important; /* Sombra pronunciada para destacar la receta sobre el fondo */
+    opacity: 1 !important;                /* Asegura opacidad total */
+    position: relative;
+    z-index: 10;                          /* Se posiciona claramente por encima de la imagen de fondo */
+    color: #212529 !important;            /* Asegura que el texto general sea gris oscuro/negro */
+}
+
+/* --- TÍTULOS Y CABECERAS DENTRO DE LA RECETA --- */
+.receta-card h3 {
+    color: #0d6efd !important;            /* Nombre de la clínica en azul */
+    font-weight: 700 !important;
+}
+
+.receta-card strong {
+    color: #495057 !important;            /* Etiquetas como "Paciente:", "Médico:" en un tono oscuro y legible */
+}
+
+.receta-card span {
+    color: #212529 !important;            /* Los datos dinámicos en negro puro para máximo contraste */
+}
+
+/* --- TABLA DE PRESCRIPCIÓN --- */
+.receta-card .table {
+    background-color: #ffffff !important; /* Asegura fondo blanco para la tabla */
+    color: #212529 !important;
+    border-color: #dee2e6 !important;
+    margin-top: 15px;
+}
+
+.receta-card .table th {
+    background-color: #f8f9fa !important; /* Encabezados de tabla con fondo gris sutil */
+    color: #495057 !important;
+    font-weight: 600;
+}
+
+/* --- BADGE DE RECETA VÁLIDA --- */
+.receta-card .badge.bg-success {
+    padding: 8px 16px !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+}
